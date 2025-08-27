@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "items-tracker",
+  "version": "${version}",
+  "name": "items-tracker",
+  "description": "",
+  "authors": [],
+  "contact": {},
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "fabric-datagen": [
+      "com.samswi.itemsTracker.client.ItemsTrackerDataGenerator"
+    ],
+    "client": [
+      "com.samswi.itemsTracker.client.ItemsTrackerClient"
+    ],
+    "main": [
+      "com.samswi.itemsTracker.ItemsTracker"
+    ]
+  },
+  "mixins": [
+    "items-tracker.mixins.json",
+    {
+      "config": "items-tracker.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
