@@ -52,11 +52,6 @@ public class ItemsTracker implements ModInitializer {
         Registries.ITEM.forEach((item) -> {
             fullItemsList.add(item.toString());
         });
-        ServerTickEvents.END_SERVER_TICK.register(minecraftServer -> {
-            minecraftServer.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> {
-                 if (goalItemsList != null && remainingItemsList != null)serverPlayerEntity.sendMessage(Text.of(String.valueOf(goalItemsList.size() - remainingItemsList.size())), true);
-            });
-        });
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.OnJoinPayload.ID, NetworkingStuff.OnJoinPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.RemoveItemPayload.ID, NetworkingStuff.RemoveItemPayload.CODEC);
 
