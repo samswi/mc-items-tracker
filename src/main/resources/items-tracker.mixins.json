@@ -4,9 +4,11 @@
   "package": "com.samswi.itemsTracker.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "CraftingScreenHandlerMixin",
     "MinecraftServerMixin",
     "PlayerInventoryMixin",
-    "PlayerManagerMixin"
+    "PlayerManagerMixin",
+    "ScreenHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

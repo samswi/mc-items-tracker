@@ -26,7 +26,7 @@ public class ItemsTracker implements ModInitializer {
 
     public static MinecraftServer currentServer;
     public static Path worldFolder;
-    public static File remainingItemsFile;
+    public static File collectedItemsFile;
     public static Gson myGson = new Gson();
 
     public static File configFolder;
@@ -37,8 +37,9 @@ public class ItemsTracker implements ModInitializer {
 
     public static List<String> fullItemsList;
     public static List<String> goalItemsList;
+    public static List<String> collectedItemsList;
     public static List<String> remainingItemsList;
-    public static JsonArray remainingItemsJsonArray;
+    public static JsonArray collectedItemsJsonArray;
 
 
     @Override
@@ -72,7 +73,7 @@ public class ItemsTracker implements ModInitializer {
     public static void onServerCreation(MinecraftServer server) {
         currentServer = server;
         worldFolder = currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath();
-        remainingItemsFile = new File(worldFolder + "all_items_remaining.txt");
+        collectedItemsFile = new File(worldFolder + "collected_items.txt");
         if (!blacklistFile.exists()){
             try (InputStream in = ItemsTracker.class.getResourceAsStream("/default_blacklist.txt")) {
                 Files.copy(in, blacklistFile.toPath());
@@ -95,26 +96,31 @@ public class ItemsTracker implements ModInitializer {
                 goalItemsList.removeIf(s -> s.contains(blacklistEntry));
             }
         });
-        remainingItemsList = new ArrayList<>(goalItemsList.size());
-        if (!remainingItemsFile.exists()) {
+        collectedItemsList = new ArrayList<>(goalItemsList.size());
+        if (!collectedItemsFile.exists()) {
             try {
-                remainingItemsJsonArray = new JsonArray(goalItemsList.size());
-                remainingItemsList.addAll(goalItemsList);
-                remainingItemsFile.createNewFile();
+                collectedItemsJsonArray = new JsonArray(goalItemsList.size());
+                collectedItemsFile.createNewFile();
 
-                saveJsonArrayToFile(remainingItemsJsonArray, remainingItemsFile);
+                saveJsonArrayToFile(collectedItemsJsonArray, collectedItemsFile);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         } else {
             try {
-                remainingItemsJsonArray = loadJsonArrayFromFile(remainingItemsFile);
-                remainingItemsJsonArray.forEach((jsonElement -> {
-                    remainingItemsList.add(jsonElement.getAsString());
+                collectedItemsJsonArray = loadJsonArrayFromFile(collectedItemsFile);
+                collectedItemsJsonArray.forEach((jsonElement -> {
+                    collectedItemsList.add(jsonElement.getAsString());
                 }));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+        remainingItemsList = new ArrayList<>(goalItemsList);
+        if (collectedItemsList != null) {
+            collectedItemsList.forEach(s -> {
+                remainingItemsList.remove(s);
+            });
         }
 
     }
@@ -123,6 +129,7 @@ public class ItemsTracker implements ModInitializer {
         if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
         if (!lastItems.contains(itemId)) {
             if (remainingItemsList.remove(itemId)) {
+                collectedItemsList.add(itemId);
                 Text text = player.getStyledDisplayName().copy().append(Text.of(" obtained ").copyContentOnly().fillStyle(Style.EMPTY).withColor(0xFFAAAAAA)).append(new ItemStack(Registries.ITEM.get(Identifier.of(itemId))).toHoverableText());
                 System.out.println("removed " + itemId + " from list");
                 currentServer.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> {
@@ -149,10 +156,10 @@ public class ItemsTracker implements ModInitializer {
 
     public static void saveItemsToFile() {
         if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
-        remainingItemsJsonArray = new JsonArray(remainingItemsList.size());
-        remainingItemsList.forEach(remainingItemsJsonArray::add);
+        collectedItemsJsonArray = new JsonArray(collectedItemsList.size());
+        collectedItemsList.forEach(collectedItemsJsonArray::add);
         System.out.println(currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath());
-        saveJsonArrayToFile(remainingItemsJsonArray, remainingItemsFile);
+        saveJsonArrayToFile(collectedItemsJsonArray, collectedItemsFile);
     }
 
     public static JsonArray loadJsonArrayFromFile(File file) throws IOException {

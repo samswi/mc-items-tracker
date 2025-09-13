@@ -4,10 +4,11 @@
   "version": "${version}",
   "name": "items-tracker",
   "description": "",
-  "authors": [],
+  "authors": ["samswi"],
   "contact": {},
   "license": "MIT",
   "environment": "*",
+  "accessWidener" : "items-tracker.accesswidener",
   "entrypoints": {
     "fabric-datagen": [
       "com.samswi.itemsTracker.client.ItemsTrackerDataGenerator"

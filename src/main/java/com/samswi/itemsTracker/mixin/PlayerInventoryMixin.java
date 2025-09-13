@@ -31,4 +31,6 @@ public class PlayerInventoryMixin {
         if (ItemsTracker.currentServer == null) return;
         ItemsTracker.removeItemFromRemainingItems(stack.getRegistryEntry().getIdAsString(), ((PlayerInventory)(Object)this).player);
     }
+
+
 }

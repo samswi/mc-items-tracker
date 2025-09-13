@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.gui.widget.Widget;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemConvertible;
 import net.minecraft.item.ItemStack;
@@ -57,9 +58,10 @@ public class RemainingItemsScreen extends Screen {
 
         @Override
         public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+            MinecraftClient client = MinecraftClient.getInstance();
             context.drawItem(myItemStack, x, y);
             if (mouseX >= x && mouseX < x + 16 && mouseY >= y && mouseY < y + 16) {
-                context.drawTooltip(MinecraftClient.getInstance().textRenderer, myItemStack.getName(), mouseX, mouseY);
+                context.drawTooltip(MinecraftClient.getInstance().textRenderer, myItemStack.getTooltip(Item.TooltipContext.DEFAULT, client.player, client.options.advancedItemTooltips ? TooltipType.Default.ADVANCED : TooltipType.Default.BASIC), mouseX, mouseY);
             }
 
         }
