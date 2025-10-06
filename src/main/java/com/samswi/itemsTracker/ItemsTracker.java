@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class ItemsTracker implements ModInitializer {
 
@@ -44,7 +45,7 @@ public class ItemsTracker implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        configFolder = new File(FabricLoader.getInstance().getConfigDir() + "/allitems");
+        configFolder = new File(FabricLoader.getInstance().getConfigDir() + "/itemstracker");
         configFolder.mkdirs();
         blacklistFile = new File(configFolder +  "/blacklist.txt");
         System.out.println(Registries.ITEM.size());
@@ -76,19 +77,18 @@ public class ItemsTracker implements ModInitializer {
                 throw new RuntimeException(e);
             }
         }
-        JsonArray blacklistJson = new JsonArray();
+        List<String> blacklist;
         try {
-            blacklistJson = loadJsonArrayFromFile(blacklistFile);
+            blacklist = fetchArrayListFromFile(blacklistFile);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         goalItemsList = new ArrayList<>(fullItemsList);
-        blacklistJson.forEach(jsonElement -> {
-            String blacklistEntry = jsonElement.getAsString();
-            if (blacklistEntry.contains("minecraft:")) {
-                goalItemsList.removeIf(s -> s.equals(blacklistEntry));
+        blacklist.forEach(string -> {
+            if (string.contains("minecraft:")) {
+                goalItemsList.removeIf(s -> s.equals(string));
             } else {
-                goalItemsList.removeIf(s -> s.contains(blacklistEntry));
+                goalItemsList.removeIf(s -> s.contains(string));
             }
         });
         collectedItemsList = new ArrayList<>(goalItemsList.size());
@@ -161,6 +161,30 @@ public class ItemsTracker implements ModInitializer {
         try (FileReader reader = new FileReader(file)) {
             return JsonParser.parseReader(reader).getAsJsonArray();
         }
+    }
+
+    public static ArrayList<String> fetchArrayListFromFile(File file) throws FileNotFoundException {
+        Scanner scanner = new Scanner(file);
+        ArrayList<String> arrayList = new ArrayList<>();
+        while (scanner.hasNextLine()){
+            String string = scanner.nextLine();
+            System.out.println(string);
+            arrayList.add(string);
+        }
+        return arrayList;
+    }
+
+    public static void saveArrayListToFile(ArrayList<String> arrayList, File file) throws IOException {
+        FileWriter myWriter = new FileWriter(file);
+        arrayList.forEach(s -> {
+            try {
+                myWriter.write(s + "\n");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        myWriter.close();
+
     }
 
 
