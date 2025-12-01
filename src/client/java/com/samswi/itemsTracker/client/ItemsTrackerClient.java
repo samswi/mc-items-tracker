@@ -1,17 +1,20 @@
 package com.samswi.itemsTracker.client;
 
 import com.google.gson.*;
+import com.samswi.itemsTracker.ItemsTracker;
 import com.samswi.itemsTracker.NetworkingStuff;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.HudLayerRegistrationCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.IdentifiedLayer;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
+import net.fabricmc.fabric.impl.resource.v1.ResourceLoaderImpl;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
+import net.minecraft.resource.Resource;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.Identifier;
@@ -36,7 +39,7 @@ public class ItemsTrackerClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
 
-        HudLayerRegistrationCallback.EVENT.register(layeredDrawer -> layeredDrawer.attachLayerBefore(IdentifiedLayer.CHAT, EXAMPLE_LAYER, HUDRenderer::render));
+        HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Identifier.of("items_tracker_hud"), HUDRenderer::render);
 
         ClientPlayNetworking.registerGlobalReceiver(NetworkingStuff.OnJoinPayload.ID, ((payload, context) -> {
             remainingItems = payload.remainingItems();
@@ -52,7 +55,7 @@ public class ItemsTrackerClient implements ClientModInitializer {
         keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "Open remaining items screen",
                 GLFW.GLFW_KEY_X,
-                "All items tracker"
+                KeyBinding.Category.MISC
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {

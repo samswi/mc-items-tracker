@@ -25,6 +25,7 @@ import java.util.Scanner;
 
 public class ItemsTracker implements ModInitializer {
 
+    public static final Object MOD_ID = "";
     public static MinecraftServer currentServer;
     public static Path worldFolder;
     public static File collectedItemsFile;

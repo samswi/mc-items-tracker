@@ -33,12 +33,12 @@ public class HUDItemDisplay{
         // Save current blending state if needed
 
 
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
-        context.drawItem(myItemStack, x, y);
-        RenderSystem.disableBlend();
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+//        RenderSystem.enableBlend();
+//        RenderSystem.defaultBlendFunc();
+//        RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
+//        context.drawItem(myItemStack, x, y);
+//        RenderSystem.disableBlend();
+//        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
 
 
         // Reset shader color and blending immediately after drawing

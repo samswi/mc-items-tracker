@@ -2,7 +2,6 @@ package com.samswi.itemsTracker.client.mixin;
 
 import com.samswi.itemsTracker.ItemsTracker;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.session.ProfileKeys;
 import net.minecraft.client.world.ClientWorld;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,7 +17,7 @@ public abstract class MinecraftClientMixin {
     public abstract ProfileKeys getProfileKeys();
 
     @Inject(at = @At("TAIL"), method = "joinWorld")
-    public void debug(ClientWorld world, DownloadingTerrainScreen.WorldEntryReason worldEntryReason, CallbackInfo ci){
+    public void debug(ClientWorld world, CallbackInfo ci){
         if (ItemsTracker.currentServer == null) return;
         System.out.println("Joined the world");
     }
