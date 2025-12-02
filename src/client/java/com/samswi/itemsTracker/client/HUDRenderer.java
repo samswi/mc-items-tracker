@@ -1,19 +1,14 @@
 package com.samswi.itemsTracker.client;
 
-import com.sun.jna.platform.unix.X11;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.render.RenderTickCounter;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.MathHelper;
 import org.joml.Matrix3x2fStack;
 
 import java.util.HashMap;
@@ -41,9 +36,32 @@ public class HUDRenderer implements ClientModInitializer {
     }
 
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
+        TextWidget itemCountWidget = new TextWidget(Text.of(String.valueOf(ItemsTrackerClient.goalItems.size() - ItemsTrackerClient.remainingItems.size())), MinecraftClient.getInstance().textRenderer);
+        TextWidget allItemsCountWidget = new TextWidget( Text.of(String.valueOf("/" + ItemsTrackerClient.goalItems.size())), MinecraftClient.getInstance().textRenderer);
+        allItemsCountWidget.setPosition(itemCountWidget.getWidth()*3+3, 13);
+        float percentDone = ItemsTrackerClient.goalItems.size()-ItemsTrackerClient.remainingItems.size();
+        TextWidget percentageDoneWidget = new TextWidget(Text.of(String.format("%.1f%%", ((percentDone/ItemsTrackerClient.goalItems.size())*100))) , MinecraftClient.getInstance().textRenderer);
+        percentageDoneWidget.setTextColor(0xFFAAAAAA);
+        percentageDoneWidget.setPosition(itemCountWidget.getWidth()*3+3, 3);
+        float offsetX = 10;
+        float offsetY = 10;
+        switch (ItemsTrackerConfig.HUD_POSITION_X){
+            case LEFT:
+                offsetX = ItemsTrackerConfig.HUD_OFFSET_X;
+                break;
+            case RIGHT:
+                offsetX = context.getScaledWindowWidth() - ((itemCountWidget.getWidth()*3) + Math.max(allItemsCountWidget.getWidth(), percentageDoneWidget.getWidth()) + 3)*ItemsTrackerConfig.HUD_SCALE - ItemsTrackerConfig.HUD_OFFSET_X;
+        }
+
+        offsetY = ItemsTrackerConfig.HUD_OFFSET_Y;
         Matrix3x2fStack matrices = context.getMatrices();
         matrices.pushMatrix();
-        matrices.translate(10, 10);
+        matrices.translate(offsetX, offsetY);
+        matrices.scale(ItemsTrackerConfig.HUD_SCALE, ItemsTrackerConfig.HUD_SCALE);
+        matrices.pushMatrix();
+        int bg_alpha = (int)(255.0 * ItemsTrackerConfig.HUD_BG_OPACITY);
+        int bg_color = (bg_alpha << 24);
+        context.fill(-5, -5, ((itemCountWidget.getWidth()*3) + Math.max(allItemsCountWidget.getWidth(), percentageDoneWidget.getWidth()) + 3) + 5, itemCountWidget.getHeight()*3 + 2, bg_color);
         matrices.scale(3.0f, 3.0f);
         int color;
         if (Util.getMeasuringTimeMs()/1000.0 > highlightEndTime){
@@ -55,16 +73,12 @@ public class HUDRenderer implements ClientModInitializer {
         else{
             color = 0xFF00FF00;
         }
-        TextWidget myTextWidget = new TextWidget(Text.of(String.valueOf(ItemsTrackerClient.goalItems.size() - ItemsTrackerClient.remainingItems.size())), MinecraftClient.getInstance().textRenderer);
-        myTextWidget.setTextColor(color);
-        myTextWidget.render(context, 0, 0, 0);
+        itemCountWidget.setTextColor(color);
+        itemCountWidget.render(context, 0, 0, 0);
         matrices.popMatrix();
-        context.drawText(MinecraftClient.getInstance().textRenderer, "/" + ItemsTrackerClient.goalItems.size(), myTextWidget.getWidth()*3+3+10, (myTextWidget.getY() + myTextWidget.getHeight())*3-3, 0xFFAAAAAA, true);
-        float percentDone = ItemsTrackerClient.goalItems.size()-ItemsTrackerClient.remainingItems.size();
-        context.drawText(MinecraftClient.getInstance().textRenderer, String.format("%.1f%%", ((percentDone/ItemsTrackerClient.goalItems.size())*100)), myTextWidget.getWidth()*3+3+10, (myTextWidget.getY() + myTextWidget.getHeight())*3-13, 0xFFAAAAAA, true);
-        newestItemsMap.forEach((integer, hudItemDisplay) -> {
-            hudItemDisplay.y = (myTextWidget.getHeight()*3+10)+(hudItemDisplay.index*18);
-//            hudItemDisplay.render(context);
-        });
+        allItemsCountWidget.setTextColor(0xFFAAAAAA);
+        allItemsCountWidget.render(context, 0, 0, 0);
+        percentageDoneWidget.render(context,0,0,0);
+        matrices.popMatrix();
     }
 }
