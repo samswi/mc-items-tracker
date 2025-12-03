@@ -20,6 +20,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -42,6 +43,8 @@ public class ItemsTracker implements ModInitializer {
     public static List<String> collectedItemsList;
     public static List<String> remainingItemsList;
     public static JsonArray collectedItemsJsonArray;
+
+    public static List<String> dumpedItemsList;
 
 
     @Override
@@ -112,6 +115,25 @@ public class ItemsTracker implements ModInitializer {
                 throw new RuntimeException(e);
             }
         }
+        dumpedItemsList = new ArrayList<>();
+
+        blacklist.forEach(string -> {
+            Iterator<String> iterator = collectedItemsList.iterator();
+            while (iterator.hasNext()) {
+                String item = iterator.next();
+                if (string.contains("minecraft:")) {
+                    if (item.equals(string)) {
+                        dumpedItemsList.add(item);
+                        iterator.remove();
+                    }
+                } else {
+                    if (item.contains(string)) {
+                        dumpedItemsList.add(item);
+                        iterator.remove();
+                    }
+                }
+            }
+        });
         remainingItemsList = new ArrayList<>(goalItemsList);
         if (collectedItemsList != null) {
             collectedItemsList.forEach(s -> {
@@ -154,6 +176,7 @@ public class ItemsTracker implements ModInitializer {
         if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
         collectedItemsJsonArray = new JsonArray(collectedItemsList.size());
         collectedItemsList.forEach(collectedItemsJsonArray::add);
+        dumpedItemsList.forEach(collectedItemsJsonArray::add);
         System.out.println(currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath());
         saveJsonArrayToFile(collectedItemsJsonArray, collectedItemsFile);
     }
