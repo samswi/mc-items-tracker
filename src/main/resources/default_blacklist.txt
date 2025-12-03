@@ -10,7 +10,7 @@ minecraft:reinforced_deepslate
 minecraft:trial_spawner
 minecraft:vault
 minecraft:barrier
-minecraft:command_block
+command_block
 minecraft:jigsaw
 minecraft:light
 minecraft:petrified_oak_slab
@@ -23,3 +23,5 @@ minecraft:test_instance_block
 minecraft:air
 minecraft:knowledge_book
 minecraft:debug_stick
+minecraft:suspicious_sand
+minecraft:suspicious_gravel
