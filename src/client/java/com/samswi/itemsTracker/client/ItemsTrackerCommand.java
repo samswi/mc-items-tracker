@@ -23,7 +23,7 @@ public class ItemsTrackerCommand {
                         .executes(commandContext -> {
                             Executors.newScheduledThreadPool(1).schedule(()  -> {
                                 client.execute(() -> {
-                                    client.setScreen(new RemainingItemsScreen());
+                                    client.setScreen(new RemainingItemsScreen(12));
                                 });
                             },  1, TimeUnit.MILLISECONDS);
                             return 0;

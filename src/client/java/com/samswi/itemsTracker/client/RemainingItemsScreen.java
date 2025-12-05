@@ -3,44 +3,47 @@ package com.samswi.itemsTracker.client;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
+import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.*;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemConvertible;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
+import java.util.List;
+
 public class RemainingItemsScreen extends Screen {
+    int rowWidth = 12;
     TextWidget myTextWidget;
-    private ScrollableLayoutWidget scrollableLayoutWidget;
+    private final ScrollableLayoutWidget scrollableLayoutWidget;
     GridWidget grid;
     GridWidget.Adder gridAdder;
     final MinecraftClient client = MinecraftClient.getInstance();
-    public final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
+    public ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
 
+    ButtonWidget extendButton = ButtonWidget.builder(Text.of("⛶"), button -> {
+        client.setScreen(new RemainingItemsScreen(
+                (client.getWindow().getScaledWidth() / 24) - 1
+        ));
+    }).build();
 
-    RemainingItemsScreen(){
+    RemainingItemsScreen(int rowWidth){
         super(Text.of("Remaining Items"));
-
+        this.rowWidth = rowWidth;
         myTextWidget = new TextWidget(Text.of("Remaining items"), MinecraftClient.getInstance().textRenderer);
 
         layout.addHeader(Text.of("Item Tracker"), client.textRenderer);
+        extendButton.setPosition(client.getWindow().getScaledWidth() - 26, 6);
+        extendButton.setDimensions(20, 20);
         this.layout.addFooter(ButtonWidget.builder(ScreenTexts.DONE, (button) -> {
             this.close();
         }).width(200).build());
         grid = new GridWidget();
         grid.getMainPositioner()
                 .margin(4);
-        gridAdder = grid.createAdder(12);
+        gridAdder = grid.createAdder(rowWidth);
 
         for (String i : ItemsTrackerClient.goalItems){
             BackgroundedItemStackWidget itemWidget;
@@ -53,7 +56,6 @@ public class RemainingItemsScreen extends Screen {
         }
 
         scrollableLayoutWidget = new ScrollableLayoutWidget(client, grid, layout.getContentHeight());
-
         layout.addBody(scrollableLayoutWidget);
 
     }
@@ -70,6 +72,7 @@ public class RemainingItemsScreen extends Screen {
         scrollableLayoutWidget.setPosition(scrollableLayoutWidget.getX(), layout.getHeaderHeight());
         grid.refreshPositions();
         layout.forEachChild(this::addDrawableChild);
+        this.addDrawableChild(extendButton);
 
     }
 

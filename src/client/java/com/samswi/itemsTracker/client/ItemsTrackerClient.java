@@ -68,7 +68,7 @@ public class ItemsTrackerClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
             if (keyBinding.wasPressed()){
-                minecraftClient.setScreen(new RemainingItemsScreen());
+                minecraftClient.setScreen(new RemainingItemsScreen(12));
             }
         });
 
