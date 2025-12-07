@@ -2,14 +2,10 @@ package com.samswi.itemsTracker.mixin;
 
 import com.mojang.datafixers.DataFixer;
 import com.samswi.itemsTracker.ItemsTracker;
-import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
-import net.minecraft.registry.Registries;
 import net.minecraft.resource.ResourcePackManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.SaveLoader;
 import net.minecraft.util.ApiServices;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.WorldSavePath;
 import net.minecraft.world.chunk.ChunkLoadProgress;
 import net.minecraft.world.level.storage.LevelStorage;
 import org.spongepowered.asm.mixin.Mixin;

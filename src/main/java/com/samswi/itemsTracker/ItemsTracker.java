@@ -2,7 +2,6 @@ package com.samswi.itemsTracker;
 
 import com.google.gson.*;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
@@ -10,7 +9,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -26,7 +24,7 @@ import java.util.Scanner;
 
 public class ItemsTracker implements ModInitializer {
 
-    public static final Object MOD_ID = "";
+    public static final Object MOD_ID = "itemstracker";
     public static MinecraftServer currentServer;
     public static Path worldFolder;
     public static File collectedItemsFile;
@@ -54,9 +52,7 @@ public class ItemsTracker implements ModInitializer {
         blacklistFile = new File(configFolder +  "/blacklist.txt");
         System.out.println(Registries.ITEM.size());
         fullItemsList = new ArrayList<>(Registries.ITEM.size());
-        Registries.ITEM.forEach((item) -> {
-            fullItemsList.add(item.toString());
-        });
+        Registries.ITEM.forEach((item) -> fullItemsList.add(item.toString()));
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.OnJoinPayload.ID, NetworkingStuff.OnJoinPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.RemoveItemPayload.ID, NetworkingStuff.RemoveItemPayload.CODEC);
 
@@ -108,9 +104,7 @@ public class ItemsTracker implements ModInitializer {
         } else {
             try {
                 collectedItemsJsonArray = loadJsonArrayFromFile(collectedItemsFile);
-                collectedItemsJsonArray.forEach((jsonElement -> {
-                    collectedItemsList.add(jsonElement.getAsString());
-                }));
+                collectedItemsJsonArray.forEach((jsonElement -> collectedItemsList.add(jsonElement.getAsString())));
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -136,9 +130,7 @@ public class ItemsTracker implements ModInitializer {
         });
         remainingItemsList = new ArrayList<>(goalItemsList);
         if (collectedItemsList != null) {
-            collectedItemsList.forEach(s -> {
-                remainingItemsList.remove(s);
-            });
+            collectedItemsList.forEach(s -> remainingItemsList.remove(s));
         }
 
     }

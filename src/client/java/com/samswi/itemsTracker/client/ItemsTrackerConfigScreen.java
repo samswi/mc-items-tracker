@@ -5,17 +5,16 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.*;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
 
 public class ItemsTrackerConfigScreen extends Screen {
 
-    private ScrollableLayoutWidget scrollableLayoutWidget;
-    GridWidget grid;
-    GridWidget.Adder gridAdder;
+    private final ScrollableLayoutWidget scrollableLayoutWidget;
+    final GridWidget grid;
+    final GridWidget.Adder gridAdder;
     final MinecraftClient client = MinecraftClient.getInstance();
     public final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
 
-    SliderWidget HUD_SCALE = new SliderWidget(0, 0, 200, 20, Text.of("HUD Scale: " + ItemsTrackerConfig.HUD_SCALE), 100) {
+    final SliderWidget HUD_SCALE = new SliderWidget(0, 0, 200, 20, Text.of("HUD Scale: " + ItemsTrackerConfig.HUD_SCALE), 100) {
         @Override
         protected void updateMessage() {
             this.setMessage(Text.of("HUD Scale: " + Math.round(((this.value*5)*100))/100.0));
@@ -27,7 +26,7 @@ public class ItemsTrackerConfigScreen extends Screen {
         }
     };
 
-    SliderWidget HUD_OFFSET_X = new SliderWidget(0, 0, 200, 20, Text.of("HUD Offset X: " + ItemsTrackerConfig.HUD_OFFSET_X), 1000) {
+    final SliderWidget HUD_OFFSET_X = new SliderWidget(0, 0, 200, 20, Text.of("HUD Offset X: " + ItemsTrackerConfig.HUD_OFFSET_X), 1000) {
         @Override
         protected void updateMessage() {
             this.setMessage(Text.of("HUD Offset X: " + (int)(this.value*1000)));
@@ -39,7 +38,7 @@ public class ItemsTrackerConfigScreen extends Screen {
         }
     };
 
-    SliderWidget HUD_OFFSET_Y = new SliderWidget(0, 0, 200, 20, Text.of("HUD Offset Y: " + ItemsTrackerConfig.HUD_OFFSET_Y), 1000) {
+    final SliderWidget HUD_OFFSET_Y = new SliderWidget(0, 0, 200, 20, Text.of("HUD Offset Y: " + ItemsTrackerConfig.HUD_OFFSET_Y), 1000) {
         @Override
         protected void updateMessage() {
             this.setMessage(Text.of("HUD Offset Y: " + (int)(this.value*1000.0)));
@@ -51,7 +50,7 @@ public class ItemsTrackerConfigScreen extends Screen {
         }
     };
 
-    SliderWidget HUD_BG_OPACITY = new SliderWidget(0, 0, 200, 20, Text.of("HUD Background opacity: " + ItemsTrackerConfig.HUD_BG_OPACITY), 100) {
+    final SliderWidget HUD_BG_OPACITY = new SliderWidget(0, 0, 200, 20, Text.of("HUD Background opacity: " + ItemsTrackerConfig.HUD_BG_OPACITY), 100) {
         @Override
         protected void updateMessage() {
             this.setMessage(Text.of("HUD Background opacity: " + Math.round(((this.value*100)*100)/100) + "%"));
@@ -63,7 +62,7 @@ public class ItemsTrackerConfigScreen extends Screen {
         }
     };
 
-    ButtonWidget ANCHOR = ButtonWidget.builder(Text.of("HUD Anchor: " + ItemsTrackerConfig.HUD_POSITION_X), button -> {
+    final ButtonWidget ANCHOR = ButtonWidget.builder(Text.of("HUD Anchor: " + ItemsTrackerConfig.HUD_POSITION_X), button -> {
         if (ItemsTrackerConfig.HUD_POSITION_X == ItemsTrackerConfig.HudPositionsX.LEFT){
             ItemsTrackerConfig.HUD_POSITION_X = ItemsTrackerConfig.HudPositionsX.RIGHT;
         } else if (ItemsTrackerConfig.HUD_POSITION_X == ItemsTrackerConfig.HudPositionsX.RIGHT) {
@@ -76,9 +75,7 @@ public class ItemsTrackerConfigScreen extends Screen {
         super(Text.of("Items tracker config"));
         ANCHOR.setDimensions(200, 20);
         layout.addHeader(Text.of("Items tracker config"), client.textRenderer);
-        this.layout.addFooter(ButtonWidget.builder(ScreenTexts.DONE, (button) -> {
-            this.close();
-        }).width(200).build());
+        this.layout.addFooter(ButtonWidget.builder(ScreenTexts.DONE, (button) -> this.close()).width(200).build());
 
         grid = new GridWidget();
         grid.getMainPositioner()

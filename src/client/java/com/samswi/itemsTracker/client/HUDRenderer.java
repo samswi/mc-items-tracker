@@ -1,41 +1,19 @@
 package com.samswi.itemsTracker.client;
 
-import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.PlainTextContent;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.ColorHelper;
 import org.joml.Matrix3x2fStack;
 
-import java.util.HashMap;
-import java.util.Map;
-
-public class HUDRenderer implements ClientModInitializer {
-    public static final Identifier EXAMPLE_LAYER = Identifier.of("allitemstracker", "hud-example-layer");
+public class HUDRenderer {
+    public static final Identifier IDENTIFIER = Identifier.of("itemstracker", "hud");
     public static double highlightEndTime = 0;
-    public static Map<Integer, HUDItemDisplay> newestItemsMap = new HashMap<>();
-
-    @Override
-    public void onInitializeClient() {
-        // Attach our rendering code to before the chat hud layer. Our layer will render right before the chat. The API will take care of z spacing and automatically add 200 after every layer.
-
-    }
-
-    public static int getFirstFreeIndex(){
-        boolean found = false;
-        int i = -1;
-        while (!found){
-            i++;
-            if (!newestItemsMap.containsKey(i)) found = true;
-        }
-        return i;
-    }
 
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
         int color;
@@ -49,13 +27,13 @@ public class HUDRenderer implements ClientModInitializer {
             color = 0xFF00FF00;
         }
         TextWidget itemCountWidget = new TextWidget(MutableText.of(new PlainTextContent.Literal(String.valueOf(ItemsTrackerClient.goalItems.size() - ItemsTrackerClient.remainingItems.size()))).withColor(color), MinecraftClient.getInstance().textRenderer);
-        TextWidget allItemsCountWidget = new TextWidget(MutableText.of(new PlainTextContent.Literal(String.valueOf("/" + ItemsTrackerClient.goalItems.size()))).withColor(0xFFAAAAAA), MinecraftClient.getInstance().textRenderer);
+        TextWidget allItemsCountWidget = new TextWidget(MutableText.of(new PlainTextContent.Literal("/" + ItemsTrackerClient.goalItems.size())).withColor(0xFFAAAAAA), MinecraftClient.getInstance().textRenderer);
         allItemsCountWidget.setPosition(itemCountWidget.getWidth()*3+3, 13);
         float percentDone = ItemsTrackerClient.goalItems.size()-ItemsTrackerClient.remainingItems.size();
         TextWidget percentageDoneWidget = new TextWidget(MutableText.of(new PlainTextContent.Literal(String.format("%.1f%%", ((percentDone/ ItemsTrackerClient.goalItems.size())*100)))).withColor(0xFFAAAAAA) , MinecraftClient.getInstance().textRenderer);
         percentageDoneWidget.setPosition(itemCountWidget.getWidth()*3+3, 3);
-        float offsetX = 10;
-        float offsetY = 10;
+        float offsetX;
+        float offsetY;
         offsetX = switch (ItemsTrackerConfig.HUD_POSITION_X) {
             case LEFT -> ItemsTrackerConfig.HUD_OFFSET_X;
             case RIGHT ->

@@ -3,7 +3,6 @@ package com.samswi.itemsTracker.client;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.*;
 import net.minecraft.item.ItemStack;
@@ -12,34 +11,26 @@ import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-import java.util.List;
-
 public class RemainingItemsScreen extends Screen {
-    int rowWidth = 12;
-    TextWidget myTextWidget;
+    int rowWidth;
     private final ScrollableLayoutWidget scrollableLayoutWidget;
-    GridWidget grid;
-    GridWidget.Adder gridAdder;
+    final GridWidget grid;
+    final GridWidget.Adder gridAdder;
     final MinecraftClient client = MinecraftClient.getInstance();
-    public ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
+    public final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
 
-    ButtonWidget extendButton = ButtonWidget.builder(Text.of("⛶"), button -> {
-        client.setScreen(new RemainingItemsScreen(
-                (client.getWindow().getScaledWidth() / 24) - 1
-        ));
-    }).build();
+    final ButtonWidget extendButton = ButtonWidget.builder(Text.of("⛶"), button -> client.setScreen(new RemainingItemsScreen(
+            (client.getWindow().getScaledWidth() / 24) - 1
+    ))).build();
 
     RemainingItemsScreen(int rowWidth){
         super(Text.of("Remaining Items"));
         this.rowWidth = rowWidth;
-        myTextWidget = new TextWidget(Text.of("Remaining items"), MinecraftClient.getInstance().textRenderer);
 
         layout.addHeader(Text.of("Item Tracker"), client.textRenderer);
         extendButton.setPosition(client.getWindow().getScaledWidth() - 26, 6);
         extendButton.setDimensions(20, 20);
-        this.layout.addFooter(ButtonWidget.builder(ScreenTexts.DONE, (button) -> {
-            this.close();
-        }).width(200).build());
+        this.layout.addFooter(ButtonWidget.builder(ScreenTexts.DONE, (button) -> this.close()).width(200).build());
         grid = new GridWidget();
         grid.getMainPositioner()
                 .margin(4);
@@ -85,7 +76,7 @@ public class RemainingItemsScreen extends Screen {
     }
 
     public static class BackgroundedItemStackWidget extends ItemStackWidget{
-        int backgroundColor;
+        final int backgroundColor;
 
         public BackgroundedItemStackWidget(MinecraftClient client, int x, int y, int width, int height, Text message, ItemStack stack, boolean drawOverlay, boolean hasTooltip, int background) {
             super(client, x, y, width, height, message, stack, drawOverlay, hasTooltip);

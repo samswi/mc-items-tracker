@@ -1,6 +1,5 @@
 package com.samswi.itemsTracker;
 
-import net.minecraft.entity.passive.RabbitEntity;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
@@ -14,17 +13,15 @@ public class NetworkingStuff {
     public static final Identifier ON_JOIN_PACKET_ID = Identifier.of("allitemstracker", "on_join_packet");
     public static final Identifier REMOVE_ITEM_PACKET_ID = Identifier.of("allitemstracker", "remove_item__packet");
 
-    // --- Custom Payload ---
     public record OnJoinPayload(List<String> remainingItems, List<String> goalItems) implements CustomPayload {
         public static final CustomPayload.Id<OnJoinPayload> ID = new CustomPayload.Id<>(ON_JOIN_PACKET_ID);
 
-        // Custom codec for a list of strings
         private static final PacketCodec<RegistryByteBuf, List<String>> STRING_LIST = new PacketCodec<>() {
             @Override
             public void encode(RegistryByteBuf buf, List<String> list) {
-                buf.writeVarInt(list.size()); // write size
+                buf.writeVarInt(list.size());
                 for (String s : list) {
-                    buf.writeString(s); // write each string
+                    buf.writeString(s);
                 }
             }
 
@@ -39,7 +36,6 @@ public class NetworkingStuff {
             }
         };
 
-        // Tuple codec for two lists
         public static final PacketCodec<RegistryByteBuf, OnJoinPayload> CODEC = PacketCodec.tuple(
                 STRING_LIST, OnJoinPayload::remainingItems,
                 STRING_LIST, OnJoinPayload::goalItems,
