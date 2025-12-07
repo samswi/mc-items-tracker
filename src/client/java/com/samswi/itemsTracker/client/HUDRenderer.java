@@ -5,6 +5,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.PlainTextContent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
@@ -36,22 +38,29 @@ public class HUDRenderer implements ClientModInitializer {
     }
 
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
-        TextWidget itemCountWidget = new TextWidget(Text.of(String.valueOf(ItemsTrackerClient.goalItems.size() - ItemsTrackerClient.remainingItems.size())), MinecraftClient.getInstance().textRenderer);
-        TextWidget allItemsCountWidget = new TextWidget( Text.of(String.valueOf("/" + ItemsTrackerClient.goalItems.size())), MinecraftClient.getInstance().textRenderer);
+        int color;
+        if (Util.getMeasuringTimeMs()/1000.0 > highlightEndTime){
+            color = 0xFFFFFFFF;
+        } else if (highlightEndTime - Util.getMeasuringTimeMs()/1000.0 < 5) {
+            float delta = (float) (1.0-((highlightEndTime - Util.getMeasuringTimeMs()/1000.0)/5));
+            color = ColorHelper.lerp(delta, 0xFF00FF00, 0xFFFFFFFF);
+        }
+        else{
+            color = 0xFF00FF00;
+        }
+        TextWidget itemCountWidget = new TextWidget(MutableText.of(new PlainTextContent.Literal(String.valueOf(ItemsTrackerClient.goalItems.size() - ItemsTrackerClient.remainingItems.size()))).withColor(color), MinecraftClient.getInstance().textRenderer);
+        TextWidget allItemsCountWidget = new TextWidget(MutableText.of(new PlainTextContent.Literal(String.valueOf("/" + ItemsTrackerClient.goalItems.size()))).withColor(0xFFAAAAAA), MinecraftClient.getInstance().textRenderer);
         allItemsCountWidget.setPosition(itemCountWidget.getWidth()*3+3, 13);
         float percentDone = ItemsTrackerClient.goalItems.size()-ItemsTrackerClient.remainingItems.size();
-        TextWidget percentageDoneWidget = new TextWidget(Text.of(String.format("%.1f%%", ((percentDone/ItemsTrackerClient.goalItems.size())*100))) , MinecraftClient.getInstance().textRenderer);
-        percentageDoneWidget.setTextColor(0xFFAAAAAA);
+        TextWidget percentageDoneWidget = new TextWidget(MutableText.of(new PlainTextContent.Literal(String.format("%.1f%%", ((percentDone/ ItemsTrackerClient.goalItems.size())*100)))).withColor(0xFFAAAAAA) , MinecraftClient.getInstance().textRenderer);
         percentageDoneWidget.setPosition(itemCountWidget.getWidth()*3+3, 3);
         float offsetX = 10;
         float offsetY = 10;
-        switch (ItemsTrackerConfig.HUD_POSITION_X){
-            case LEFT:
-                offsetX = ItemsTrackerConfig.HUD_OFFSET_X;
-                break;
-            case RIGHT:
-                offsetX = context.getScaledWindowWidth() - ((itemCountWidget.getWidth()*3) + Math.max(allItemsCountWidget.getWidth(), percentageDoneWidget.getWidth()) + 3)*ItemsTrackerConfig.HUD_SCALE - ItemsTrackerConfig.HUD_OFFSET_X;
-        }
+        offsetX = switch (ItemsTrackerConfig.HUD_POSITION_X) {
+            case LEFT -> ItemsTrackerConfig.HUD_OFFSET_X;
+            case RIGHT ->
+                    context.getScaledWindowWidth() - ((itemCountWidget.getWidth() * 3) + Math.max(allItemsCountWidget.getWidth(), percentageDoneWidget.getWidth()) + 3) * ItemsTrackerConfig.HUD_SCALE - ItemsTrackerConfig.HUD_OFFSET_X;
+        };
 
         offsetY = ItemsTrackerConfig.HUD_OFFSET_Y;
         Matrix3x2fStack matrices = context.getMatrices();
@@ -63,20 +72,8 @@ public class HUDRenderer implements ClientModInitializer {
         int bg_color = (bg_alpha << 24);
         context.fill(-5, -5, ((itemCountWidget.getWidth()*3) + Math.max(allItemsCountWidget.getWidth(), percentageDoneWidget.getWidth()) + 3) + 5, itemCountWidget.getHeight()*3 + 2, bg_color);
         matrices.scale(3.0f, 3.0f);
-        int color;
-        if (Util.getMeasuringTimeMs()/1000.0 > highlightEndTime){
-            color = 0xFFFFFFFF;
-        } else if (highlightEndTime - Util.getMeasuringTimeMs()/1000.0 < 5) {
-            float delta = (float) (1.0-((highlightEndTime - Util.getMeasuringTimeMs()/1000.0)/5));
-            color = ColorHelper.lerp(delta, 0xFF00FF00, 0xFFFFFFFF);
-        }
-        else{
-            color = 0xFF00FF00;
-        }
-        itemCountWidget.setTextColor(color);
         itemCountWidget.render(context, 0, 0, 0);
         matrices.popMatrix();
-        allItemsCountWidget.setTextColor(0xFFAAAAAA);
         allItemsCountWidget.render(context, 0, 0, 0);
         percentageDoneWidget.render(context,0,0,0);
         matrices.popMatrix();
