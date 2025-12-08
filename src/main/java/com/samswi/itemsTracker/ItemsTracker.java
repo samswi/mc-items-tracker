@@ -40,6 +40,8 @@ public class ItemsTracker implements ModInitializer {
     public static List<String> goalItemsList;
     public static List<String> collectedItemsList;
     public static List<String> remainingItemsList;
+
+    // This should be deleted somewhere in the future
     public static JsonArray collectedItemsJsonArray;
 
     public static List<String> dumpedItemsList;
@@ -70,7 +72,7 @@ public class ItemsTracker implements ModInitializer {
         currentServer = server;
         worldFolder = currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath();
         collectedItemsFile = new File(worldFolder + "collected_items.txt");
-        if (!blacklistFile.exists()){
+        if (!blacklistFile.exists()) {
             try (InputStream in = ItemsTracker.class.getResourceAsStream("/default_blacklist.txt")) {
                 Files.copy(in, blacklistFile.toPath());
             } catch (IOException e) {
@@ -79,7 +81,7 @@ public class ItemsTracker implements ModInitializer {
         }
         List<String> blacklist;
         try {
-            blacklist = fetchArrayListFromFile(blacklistFile);
+            blacklist = loadArrayListFromFile(blacklistFile);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -102,9 +104,14 @@ public class ItemsTracker implements ModInitializer {
                 throw new RuntimeException(e);
             }
         } else {
-            try {
-                collectedItemsJsonArray = loadJsonArrayFromFile(collectedItemsFile);
-                collectedItemsJsonArray.forEach((jsonElement -> collectedItemsList.add(jsonElement.getAsString())));
+            // This code is for old collected items file format (the json one)
+            try (Scanner scanner = new Scanner(collectedItemsFile)) {
+                if (scanner.nextLine().startsWith("[")) {
+                    collectedItemsJsonArray = loadJsonArrayFromFile(collectedItemsFile);
+                    collectedItemsJsonArray.forEach((jsonElement -> collectedItemsList.add(jsonElement.getAsString())));
+                } else {
+                    collectedItemsList = loadArrayListFromFile(collectedItemsFile);
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -166,11 +173,12 @@ public class ItemsTracker implements ModInitializer {
 
     public static void saveItemsToFile() {
         if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
-        collectedItemsJsonArray = new JsonArray(collectedItemsList.size());
-        collectedItemsList.forEach(collectedItemsJsonArray::add);
-        dumpedItemsList.forEach(collectedItemsJsonArray::add);
+        ArrayList<String> itemsToSaveList = new ArrayList<>(collectedItemsList.size() + dumpedItemsList.size());
+        itemsToSaveList.addAll(collectedItemsList);
+        itemsToSaveList.addAll(dumpedItemsList);
+
         System.out.println(currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath());
-        saveJsonArrayToFile(collectedItemsJsonArray, collectedItemsFile);
+        saveArrayListToFile(itemsToSaveList, collectedItemsFile);
     }
 
     public static JsonArray loadJsonArrayFromFile(File file) throws IOException {
@@ -179,7 +187,7 @@ public class ItemsTracker implements ModInitializer {
         }
     }
 
-    public static ArrayList<String> fetchArrayListFromFile(File file) throws FileNotFoundException {
+    public static ArrayList<String> loadArrayListFromFile(File file) throws FileNotFoundException {
         Scanner scanner = new Scanner(file);
         ArrayList<String> arrayList = new ArrayList<>();
         while (scanner.hasNextLine()){
@@ -190,17 +198,19 @@ public class ItemsTracker implements ModInitializer {
         return arrayList;
     }
 
-    public static void saveArrayListToFile(ArrayList<String> arrayList, File file) throws IOException {
-        FileWriter myWriter = new FileWriter(file);
-        arrayList.forEach(s -> {
-            try {
-                myWriter.write(s + "\n");
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        myWriter.close();
-
+    public static void saveArrayListToFile(ArrayList<String> arrayList, File file) {
+        try (FileWriter myWriter = new FileWriter(file)){
+            arrayList.forEach(s -> {
+                try {
+                    myWriter.write(s + "\n");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (IOException e){
+            System.out.println("Failed to save collectedItemsList");
+            e.printStackTrace();
+        }
     }
 
 
