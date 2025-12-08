@@ -44,7 +44,7 @@ public class ItemsTracker implements ModInitializer {
     // This should be deleted somewhere in the future
     public static JsonArray collectedItemsJsonArray;
 
-    public static List<String> dumpedItemsList;
+    public static List<String> nonNeededItemsList;
 
 
     @Override
@@ -116,7 +116,7 @@ public class ItemsTracker implements ModInitializer {
                 throw new RuntimeException(e);
             }
         }
-        dumpedItemsList = new ArrayList<>();
+        nonNeededItemsList = new ArrayList<>();
 
         blacklist.forEach(string -> {
             Iterator<String> iterator = collectedItemsList.iterator();
@@ -124,12 +124,12 @@ public class ItemsTracker implements ModInitializer {
                 String item = iterator.next();
                 if (string.contains("minecraft:")) {
                     if (item.equals(string)) {
-                        dumpedItemsList.add(item);
+                        nonNeededItemsList.add(item);
                         iterator.remove();
                     }
                 } else {
                     if (item.contains(string)) {
-                        dumpedItemsList.add(item);
+                        nonNeededItemsList.add(item);
                         iterator.remove();
                     }
                 }
@@ -153,8 +153,7 @@ public class ItemsTracker implements ModInitializer {
                     ServerPlayNetworking.send(serverPlayerEntity, new NetworkingStuff.RemoveItemPayload(itemId, remainingItemsList.size()));
                     serverPlayerEntity.sendMessage(text);
                 });
-
-            }
+            } else if (!nonNeededItemsList.contains(itemId)) nonNeededItemsList.add(itemId);
             lastItems.add(lastItemsIterator, itemId);
             lastItemsIterator++;
             if (lastItemsIterator >= 50) lastItemsIterator = 0;
@@ -173,9 +172,9 @@ public class ItemsTracker implements ModInitializer {
 
     public static void saveItemsToFile() {
         if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
-        ArrayList<String> itemsToSaveList = new ArrayList<>(collectedItemsList.size() + dumpedItemsList.size());
+        ArrayList<String> itemsToSaveList = new ArrayList<>(collectedItemsList.size() + nonNeededItemsList.size());
         itemsToSaveList.addAll(collectedItemsList);
-        itemsToSaveList.addAll(dumpedItemsList);
+        itemsToSaveList.addAll(nonNeededItemsList);
 
         System.out.println(currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath());
         saveArrayListToFile(itemsToSaveList, collectedItemsFile);
