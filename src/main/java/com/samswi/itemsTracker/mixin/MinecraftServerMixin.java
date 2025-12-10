@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.net.Proxy;
 
@@ -28,5 +29,10 @@ public class MinecraftServerMixin{
     @Inject(at = @At("HEAD"), method = "shutdown")
     public void onShutdown(CallbackInfo ci){
         ItemsTracker.onServerExit();
+    }
+
+    @Inject(at=@At("HEAD"), method = "save")
+    public void injectItemTrackerSave(boolean suppressLogs, boolean flush, boolean force, CallbackInfoReturnable<Boolean> cir){
+        ItemsTracker.saveItemsToFile();
     }
 }

@@ -171,6 +171,7 @@ public class ItemsTracker implements ModInitializer {
     }
 
     public static void saveItemsToFile() {
+        if (currentServer == null) return;
         if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
         ArrayList<String> itemsToSaveList = new ArrayList<>(collectedItemsList.size() + nonNeededItemsList.size());
         itemsToSaveList.addAll(collectedItemsList);

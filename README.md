@@ -1,5 +1,5 @@
 # Items tracker
-<img width="487" height="215" alt="Image showing the HUD" src="https://github.com/user-attachments/assets/97de2132-2476-4d4d-9287-ceb469e8f90c" />
+<img alt="Image showing the HUD" src="https://github.com/user-attachments/assets/97de2132-2476-4d4d-9287-ceb469e8f90c" />
 
 This relatively simple fabric mod tracks which unique items that have been picked up by player(s) in a specific world.
 This mod does work server-side, but to see the counter you have to have it also installed client-side.
@@ -7,7 +7,7 @@ This mod does work server-side, but to see the counter you have to have it also 
 ## Basic usage
 Press `X`(keybind can be changed) to open screen containing a list of items that were collected, and ones that were not.
 
-<img width="1920" height="1080" alt="Remaining items screen" src="https://github.com/user-attachments/assets/cf8ec83e-6237-49f0-8dbf-0850bcc8d510" />
+<img alt="Remaining items screen" src="https://github.com/user-attachments/assets/cf8ec83e-6237-49f0-8dbf-0850bcc8d510" />
 
 
 Client-side HUD can be configured by using `/itemstracker config` command
