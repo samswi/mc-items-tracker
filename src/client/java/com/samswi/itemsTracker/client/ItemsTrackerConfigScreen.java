@@ -14,7 +14,7 @@ public class ItemsTrackerConfigScreen extends Screen {
     final MinecraftClient client = MinecraftClient.getInstance();
     public final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
 
-    final SliderWidget HUD_SCALE = new SliderWidget(0, 0, 200, 20, Text.of("HUD Scale: " + ItemsTrackerConfig.HUD_SCALE), 100) {
+    final SliderWidget HUD_SCALE = new SliderWidget(0, 0, 408, 20, Text.of("HUD Scale: " + ItemsTrackerConfig.HUD_SCALE), 100) {
         @Override
         protected void updateMessage() {
             this.setMessage(Text.of("HUD Scale: " + Math.round(((this.value*5)*100))/100.0));
@@ -26,7 +26,7 @@ public class ItemsTrackerConfigScreen extends Screen {
         }
     };
 
-    final SliderWidget HUD_OFFSET_X = new SliderWidget(0, 0, 200, 20, Text.of("HUD Offset X: " + ItemsTrackerConfig.HUD_OFFSET_X), 1000) {
+    final SliderWidget HUD_OFFSET_X = new SliderWidget(0, 0, 408, 20, Text.of("HUD Offset X: " + ItemsTrackerConfig.HUD_OFFSET_X), 1000) {
         @Override
         protected void updateMessage() {
             this.setMessage(Text.of("HUD Offset X: " + (int)(this.value*1000)));
@@ -38,7 +38,7 @@ public class ItemsTrackerConfigScreen extends Screen {
         }
     };
 
-    final SliderWidget HUD_OFFSET_Y = new SliderWidget(0, 0, 200, 20, Text.of("HUD Offset Y: " + ItemsTrackerConfig.HUD_OFFSET_Y), 1000) {
+    final SliderWidget HUD_OFFSET_Y = new SliderWidget(0, 0, 408, 20, Text.of("HUD Offset Y: " + ItemsTrackerConfig.HUD_OFFSET_Y), 1000) {
         @Override
         protected void updateMessage() {
             this.setMessage(Text.of("HUD Offset Y: " + (int)(this.value*1000.0)));
@@ -82,9 +82,9 @@ public class ItemsTrackerConfigScreen extends Screen {
                 .margin(4);
         gridAdder = grid.createAdder(2);
 
-        gridAdder.add(HUD_SCALE);
-        gridAdder.add(HUD_OFFSET_X);
-        gridAdder.add(HUD_OFFSET_Y);
+        gridAdder.add(HUD_SCALE, 2);
+        gridAdder.add(HUD_OFFSET_X, 2);
+        gridAdder.add(HUD_OFFSET_Y, 2);
         gridAdder.add(HUD_BG_OPACITY);
         gridAdder.add(ANCHOR);
 
