@@ -15,13 +15,13 @@ public class PlayerInventoryMixin {
     @Inject(at = @At("HEAD"), method = "addStack(ILnet/minecraft/item/ItemStack;)I")
     void checkForItem(int slot, ItemStack stack, CallbackInfoReturnable<Integer> cir){
         if (ItemsTracker.currentServer == null) return;
-        ItemsTracker.removeItemFromRemainingItems(stack.getRegistryEntry().getIdAsString(), ((PlayerInventory)(Object)this).player);
+        ItemsTracker.removeItemFromRemainingItems(stack, ((PlayerInventory)(Object)this).player);
     }
 
     @Inject(at = @At("HEAD"), method = "setStack")
     void checkForItem(int slot, ItemStack stack, CallbackInfo ci){
         if (ItemsTracker.currentServer == null) return;
-        ItemsTracker.removeItemFromRemainingItems(stack.getRegistryEntry().getIdAsString(), ((PlayerInventory)(Object)this).player);
+        ItemsTracker.removeItemFromRemainingItems(stack, ((PlayerInventory)(Object)this).player);
     }
 
 

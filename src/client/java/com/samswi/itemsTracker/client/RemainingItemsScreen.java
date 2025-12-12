@@ -1,12 +1,18 @@
 package com.samswi.itemsTracker.client;
 
+import com.samswi.itemsTracker.ItemsTracker;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.*;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.Potions;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -37,11 +43,12 @@ public class RemainingItemsScreen extends Screen {
         gridAdder = grid.createAdder(rowWidth);
 
         for (String i : ItemsTrackerClient.goalItems){
+            ItemStack itemStack = ItemsTracker.parseItem(i);
             BackgroundedItemStackWidget itemWidget;
             if (ItemsTrackerClient.remainingItems.contains(i)){
-                itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), new ItemStack(Registries.ITEM.get(Identifier.of(i))), true, true, 0x88000000);
+                itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), itemStack, true, true, 0x88000000);
             } else {
-                itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), new ItemStack(Registries.ITEM.get(Identifier.of(i))), true, true, 0xFF00FF00);
+                itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), itemStack, true, true, 0xFF00FF00);
             }
             gridAdder.add(itemWidget);
         }

@@ -17,7 +17,7 @@ public class CraftingScreenHandlerMixin {
 
         for (Slot slot : ((CraftingScreenHandler)(Object)this).getInputSlots()){
             if (ItemsTracker.currentServer == null) return;
-            ItemsTracker.removeItemFromRemainingItems(slot.getStack().getRegistryEntry().getIdAsString(), ((CraftingScreenHandler)(Object)this).player);
+            ItemsTracker.removeItemFromRemainingItems(slot.getStack(), ((CraftingScreenHandler)(Object)this).player);
         }
 
     }

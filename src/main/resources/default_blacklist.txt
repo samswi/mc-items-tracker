@@ -25,3 +25,4 @@ minecraft:knowledge_book
 minecraft:debug_stick
 minecraft:suspicious_sand
 minecraft:suspicious_gravel
+Pluck

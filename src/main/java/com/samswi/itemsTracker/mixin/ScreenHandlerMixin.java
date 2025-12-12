@@ -15,6 +15,6 @@ public abstract class ScreenHandlerMixin {
     @Inject(at = @At("TAIL"), method = "onSlotClick")
     public void checkForItem(int slotIndex, int button, SlotActionType actionType, PlayerEntity player, CallbackInfo ci){
         if (ItemsTracker.currentServer == null) return;
-        ItemsTracker.removeItemFromRemainingItems(((ScreenHandler)(Object)this).getCursorStack().getRegistryEntry().getIdAsString(), player);
+        ItemsTracker.removeItemFromRemainingItems(((ScreenHandler)(Object)this).getCursorStack(), player);
     }
 }
