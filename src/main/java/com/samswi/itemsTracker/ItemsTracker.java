@@ -17,10 +17,7 @@ import net.minecraft.util.WorldSavePath;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class ItemsTracker implements ModInitializer {
 
@@ -178,7 +175,7 @@ public class ItemsTracker implements ModInitializer {
         itemsToSaveList.addAll(nonNeededItemsList);
 
         System.out.println(currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath());
-        saveArrayListToFile(itemsToSaveList, collectedItemsFile);
+        saveCollectionToFile(itemsToSaveList, collectedItemsFile);
     }
 
     public static JsonArray loadJsonArrayFromFile(File file) throws IOException {
@@ -192,15 +189,14 @@ public class ItemsTracker implements ModInitializer {
         ArrayList<String> arrayList = new ArrayList<>();
         while (scanner.hasNextLine()){
             String string = scanner.nextLine();
-            System.out.println(string);
             arrayList.add(string);
         }
         return arrayList;
     }
 
-    public static void saveArrayListToFile(ArrayList<String> arrayList, File file) {
+    public static void saveCollectionToFile(Collection<String> collection, File file) {
         try (FileWriter myWriter = new FileWriter(file)){
-            arrayList.forEach(s -> {
+            collection.forEach(s -> {
                 try {
                     myWriter.write(s + "\n");
                 } catch (IOException e) {
@@ -215,7 +211,7 @@ public class ItemsTracker implements ModInitializer {
 
 
     public static void saveJsonArrayToFile(JsonArray object, File file) {
-        try (FileWriter writer = new FileWriter(file)) {
+        try (FileWriter writer = new FileWriter(file, false)) {
             myGson.toJson(object, writer);
         } catch (IOException e) {
             System.out.println("Could not save json to file!");
