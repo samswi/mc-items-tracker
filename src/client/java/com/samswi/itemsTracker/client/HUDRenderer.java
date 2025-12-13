@@ -16,6 +16,7 @@ public class HUDRenderer {
     public static double highlightEndTime = 0;
 
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
+        if (ItemsTrackerClient.goalItems == null) return;
         int color;
         if (Util.getMeasuringTimeMs()/1000.0 > highlightEndTime){
             color = 0xFFFFFFFF;

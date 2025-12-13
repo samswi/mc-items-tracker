@@ -1,6 +1,6 @@
 package com.samswi.itemsTracker.client.mixin;
 
-import com.samswi.itemsTracker.ItemsTracker;
+import com.samswi.itemsTracker.client.ItemsTrackerClient;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 import org.spongepowered.asm.mixin.Mixin;
@@ -11,9 +11,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftClient.class)
 public abstract class MinecraftClientMixin {
 
-    @Inject(at = @At("TAIL"), method = "joinWorld")
-    public void debug(ClientWorld world, CallbackInfo ci){
-        if (ItemsTracker.currentServer == null) return;
-        System.out.println("Joined the world");
+    @Inject(at = @At("HEAD"), method = "joinWorld")
+    public void clean(ClientWorld world, CallbackInfo ci){
+        ItemsTrackerClient.goalItems = null;
+        ItemsTrackerClient.remainingItems = null;
     }
 }
