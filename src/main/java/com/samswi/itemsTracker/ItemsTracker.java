@@ -117,11 +117,13 @@ public class ItemsTracker implements ModInitializer {
         } else {
             // This code is for old collected items file format (the json one)
             try (Scanner scanner = new Scanner(collectedItemsFile)) {
-                if (scanner.nextLine().startsWith("[")) {
-                    collectedItemsJsonArray = loadJsonArrayFromFile(collectedItemsFile);
-                    collectedItemsJsonArray.forEach((jsonElement -> collectedItemsList.add(jsonElement.getAsString())));
-                } else {
-                    collectedItemsList = loadArrayListFromFile(collectedItemsFile);
+                if (scanner.hasNextLine()) {
+                    if (scanner.nextLine().startsWith("[")) {
+                        collectedItemsJsonArray = loadJsonArrayFromFile(collectedItemsFile);
+                        collectedItemsJsonArray.forEach((jsonElement -> collectedItemsList.add(jsonElement.getAsString())));
+                    } else {
+                        collectedItemsList = loadArrayListFromFile(collectedItemsFile);
+                    }
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
