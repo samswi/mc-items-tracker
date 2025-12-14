@@ -11,8 +11,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftClient.class)
 public abstract class MinecraftClientMixin {
 
-    @Inject(at = @At("HEAD"), method = "joinWorld")
-    public void clean(ClientWorld world, CallbackInfo ci){
+    @Inject(at = @At("HEAD"), method = "Lnet/minecraft/client/MinecraftClient;onDisconnected()V")
+    public void clean(CallbackInfo ci){
         ItemsTrackerClient.goalItems = null;
         ItemsTrackerClient.remainingItems = null;
     }
