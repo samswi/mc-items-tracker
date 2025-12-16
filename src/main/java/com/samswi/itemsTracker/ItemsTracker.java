@@ -9,7 +9,6 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Potion;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
@@ -28,7 +27,6 @@ public class ItemsTracker implements ModInitializer {
     public static MinecraftServer currentServer;
     public static Path worldFolder;
     public static File collectedItemsFile;
-    public static Gson myGson = new Gson();
 
     public static File configFolder;
     public static File blacklistFile;
@@ -52,7 +50,6 @@ public class ItemsTracker implements ModInitializer {
         configFolder = new File(FabricLoader.getInstance().getConfigDir() + "/itemstracker");
         configFolder.mkdirs();
         blacklistFile = new File(configFolder +  "/blacklist.txt");
-        System.out.println(Registries.ITEM.size()+200);
         fullItemsList = new ArrayList<>(Registries.ITEM.size());
         Set<String> potionEffectsList = new HashSet<>(Registries.POTION.size());
         Registries.POTION.forEach(potion -> potionEffectsList.add(potion.getBaseName()));
@@ -107,10 +104,7 @@ public class ItemsTracker implements ModInitializer {
         collectedItemsList = new ArrayList<>(goalItemsList.size());
         if (!collectedItemsFile.exists()) {
             try {
-                collectedItemsJsonArray = new JsonArray(goalItemsList.size());
                 collectedItemsFile.createNewFile();
-
-                saveJsonArrayToFile(collectedItemsJsonArray, collectedItemsFile);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -158,9 +152,10 @@ public class ItemsTracker implements ModInitializer {
     public static void removeItemFromRemainingItems(ItemStack itemStack, PlayerEntity player) {
         String itemId = itemStack.getRegistryEntry().getIdAsString();
         if (itemStack.get(DataComponentTypes.POTION_CONTENTS) != null){
-            String potionName = itemStack.get(DataComponentTypes.POTION_CONTENTS).potion().get().value().getBaseName();
-            itemId = itemId + "P" + potionName;
-//            System.out.println("[DEBUG] " + itemStack.get(DataComponentTypes.POTION_CONTENTS).potion().get().getIdAsString());
+            if (itemStack.get(DataComponentTypes.POTION_CONTENTS).potion().isPresent()) {
+                String potionName = itemStack.get(DataComponentTypes.POTION_CONTENTS).potion().get().value().getBaseName();
+                itemId = itemId + "P" + potionName;
+            }
         }
 
         if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
@@ -168,7 +163,6 @@ public class ItemsTracker implements ModInitializer {
             if (remainingItemsList.remove(itemId)) {
                 collectedItemsList.add(itemId);
                 Text text = player.getStyledDisplayName().copy().append(Text.of(" obtained ").copyContentOnly().fillStyle(Style.EMPTY).withColor(0xFFAAAAAA)).append(parseItemText(itemId));
-                System.out.println("removed " + itemId + " from list");
                 String finalItemId = itemId;
                 currentServer.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> {
                     ServerPlayNetworking.send(serverPlayerEntity, new NetworkingStuff.RemoveItemPayload(finalItemId, remainingItemsList.size()));
@@ -198,7 +192,6 @@ public class ItemsTracker implements ModInitializer {
         itemsToSaveList.addAll(collectedItemsList);
         itemsToSaveList.addAll(nonNeededItemsList);
 
-        System.out.println(currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath());
         saveCollectionToFile(itemsToSaveList, collectedItemsFile);
     }
 
@@ -230,16 +223,6 @@ public class ItemsTracker implements ModInitializer {
         } catch (IOException e){
             System.out.println("Failed to save collectedItemsList");
             e.printStackTrace();
-        }
-    }
-
-
-    public static void saveJsonArrayToFile(JsonArray object, File file) {
-        try (FileWriter writer = new FileWriter(file, false)) {
-            myGson.toJson(object, writer);
-        } catch (IOException e) {
-            System.out.println("Could not save json to file!");
-            throw new RuntimeException(e);
         }
     }
 

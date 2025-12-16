@@ -21,7 +21,6 @@ public class MinecraftServerMixin{
 
     @Inject(at = @At("TAIL"), method = "<init>")
     public void catchServer(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, Proxy proxy, DataFixer dataFixer, ApiServices apiServices, ChunkLoadProgress chunkLoadProgress, CallbackInfo ci) {
-        System.out.println("Server initialized");
         ItemsTracker.onServerCreation(((MinecraftServer) (Object) this));
 
     }

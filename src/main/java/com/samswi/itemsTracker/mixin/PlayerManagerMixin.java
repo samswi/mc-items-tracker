@@ -19,6 +19,5 @@ public class PlayerManagerMixin {
     void sendItemsList(ClientConnection connection, ServerPlayerEntity player, ConnectedClientData clientData, CallbackInfo ci){
         if (ItemsTracker.currentServer == null) return;
         ServerPlayNetworking.send(player, new NetworkingStuff.OnJoinPayload(ItemsTracker.remainingItemsList, ItemsTracker.goalItemsList));
-        System.out.println("Sent onJoin packet");
     }
 }
