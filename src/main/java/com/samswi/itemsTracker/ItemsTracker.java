@@ -13,6 +13,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.WorldSavePath;
 
@@ -65,6 +66,7 @@ public class ItemsTracker implements ModInitializer {
         });
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.OnJoinPayload.ID, NetworkingStuff.OnJoinPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.RemoveItemPayload.ID, NetworkingStuff.RemoveItemPayload.CODEC);
+        PayloadTypeRegistry.playS2C().register(NetworkingStuff.ShowToastPayload.ID, NetworkingStuff.ShowToastPayload.CODEC);
 
         if (!blacklistFile.exists()){
             try (InputStream in = ItemsTracker.class.getResourceAsStream("/default_blacklist.txt")) {
@@ -222,6 +224,11 @@ public class ItemsTracker implements ModInitializer {
             });
         } catch (IOException e){
             System.out.println("Failed to save collectedItemsList");
+            currentServer.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> {
+                ServerPlayNetworking.send(serverPlayerEntity, new NetworkingStuff.ShowToastPayload("Failed to save .collected_items.txt", "Check server-side logs"));
+                serverPlayerEntity.sendMessage(Text.literal("Failed to save .collected_items.txt. Hover me for error info").formatted(Formatting.UNDERLINE).withColor(0xFFFF0000).styled(style -> style.withHoverEvent(new HoverEvent.ShowText(Text.of(e.getMessage())))));
+
+            });
             e.printStackTrace();
         }
     }

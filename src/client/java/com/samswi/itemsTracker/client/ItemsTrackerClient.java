@@ -9,7 +9,10 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.toast.SystemToast;
+import net.minecraft.text.Text;
 import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
@@ -40,6 +43,10 @@ public class ItemsTrackerClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(NetworkingStuff.RemoveItemPayload.ID, (payload, context) -> {
             remainingItems.remove(payload.itemId());
             HUDRenderer.highlightEndTime = (Util.getMeasuringTimeMs() / 1000.0) + 5;
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(NetworkingStuff.ShowToastPayload.ID, (payload, context) -> {
+            MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_ACCESS_FAILURE, Text.of(payload.title()), Text.of(payload.description())));
         });
 
         keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
