@@ -81,7 +81,7 @@ public class ItemsTracker implements ModInitializer {
     public static void onServerCreation(MinecraftServer server) {
         currentServer = server;
         worldFolder = currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath();
-        collectedItemsFile = new File(worldFolder + "collected_items.txt");
+        collectedItemsFile = worldFolder.resolve(".collected_items.txt").toFile();
         if (!blacklistFile.exists()) {
             try (InputStream in = ItemsTracker.class.getResourceAsStream("/default_blacklist.txt")) {
                 Files.copy(in, blacklistFile.toPath());
@@ -204,16 +204,17 @@ public class ItemsTracker implements ModInitializer {
     }
 
     public static ArrayList<String> loadArrayListFromFile(File file) throws FileNotFoundException {
-        Scanner scanner = new Scanner(file);
-        ArrayList<String> arrayList = new ArrayList<>();
-        while (scanner.hasNextLine()){
-            String string = scanner.nextLine();
-            arrayList.add(string);
+        try (Scanner scanner = new Scanner(file)) {
+            ArrayList<String> arrayList = new ArrayList<>();
+            while (scanner.hasNextLine()) {
+                String string = scanner.nextLine();
+                arrayList.add(string);
+            }
+            return arrayList;
         }
-        return arrayList;
     }
 
-    public static void saveCollectionToFile(Collection<String> collection, File file) {
+    public static synchronized void saveCollectionToFile(Collection<String> collection, File file) {
         try (FileWriter myWriter = new FileWriter(file)){
             collection.forEach(s -> {
                 try {
