@@ -18,7 +18,10 @@ public class HUDRenderer {
     public static void render(DrawContext context, RenderTickCounter tickCounter) {
         if (ItemsTrackerClient.goalItems == null) return;
         int color;
-        if (Util.getMeasuringTimeMs()/1000.0 > highlightEndTime){
+        if (ItemsTrackerClient.remainingItems.isEmpty()){
+            color = 0xFF00FF00;
+        }
+        else if (Util.getMeasuringTimeMs()/1000.0 > highlightEndTime){
             color = 0xFFFFFFFF;
         } else if (highlightEndTime - Util.getMeasuringTimeMs()/1000.0 < 5) {
             float delta = (float) (1.0-((highlightEndTime - Util.getMeasuringTimeMs()/1000.0)/5));
@@ -31,7 +34,7 @@ public class HUDRenderer {
         TextWidget allItemsCountWidget = new TextWidget(MutableText.of(new PlainTextContent.Literal("/" + ItemsTrackerClient.goalItems.size())).withColor(0xFFAAAAAA), MinecraftClient.getInstance().textRenderer);
         allItemsCountWidget.setPosition(itemCountWidget.getWidth()*3+3, 13);
         float percentDone = ItemsTrackerClient.goalItems.size()-ItemsTrackerClient.remainingItems.size();
-        TextWidget percentageDoneWidget = new TextWidget(MutableText.of(new PlainTextContent.Literal(String.format("%.1f%%", ((percentDone/ ItemsTrackerClient.goalItems.size())*100)))).withColor(0xFFAAAAAA) , MinecraftClient.getInstance().textRenderer);
+        TextWidget percentageDoneWidget = new TextWidget(MutableText.of(new PlainTextContent.Literal(String.format("%.1f%%", ((percentDone/ ItemsTrackerClient.goalItems.size())*100)))).withColor(ItemsTrackerClient.remainingItems.isEmpty() ? 0xFF88FF88 : 0xFFAAAAAA) , MinecraftClient.getInstance().textRenderer);
         percentageDoneWidget.setPosition(itemCountWidget.getWidth()*3+3, 3);
         float offsetX;
         float offsetY;
