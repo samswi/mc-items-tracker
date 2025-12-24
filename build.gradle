@@ -20,7 +20,7 @@ loom {
         }
     }
 
-    accessWidenerPath = file("src/main/resources/items-tracker.accesswidener")
+    accessWidenerPath = file("src/main/resources/items-tracker.classtweaker")
 }
 
 fabricApi {

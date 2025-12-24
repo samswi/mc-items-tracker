@@ -13,6 +13,7 @@ public class NetworkingStuff {
     public static final Identifier ON_JOIN_PACKET_ID = Identifier.of("itemstracker", "on_join_packet");
     public static final Identifier REMOVE_ITEM_PACKET_ID = Identifier.of("itemstracker", "remove_item_packet");
     public static final Identifier SHOW_TOAST_PACKET_ID = Identifier.of("itemstracker", "show_toast_packet");
+    public static final Identifier HANDSHAKE_PACKET_ID = Identifier.of("itemstracker", "handshake");
 
     public record OnJoinPayload(List<String> remainingItems, List<String> goalItems) implements CustomPayload {
         public static final CustomPayload.Id<OnJoinPayload> ID = new CustomPayload.Id<>(ON_JOIN_PACKET_ID);
@@ -69,6 +70,14 @@ public class NetworkingStuff {
                 PacketCodecs.STRING, ShowToastPayload::description,
                 ShowToastPayload::new
         );
+
+        @Override
+        public Id<? extends CustomPayload> getId() {return ID;}
+    }
+
+    public record HandshakePayload() implements CustomPayload{
+        public static final CustomPayload.Id<HandshakePayload> ID = new CustomPayload.Id<>(HANDSHAKE_PACKET_ID);
+        public static final PacketCodec<RegistryByteBuf, HandshakePayload> CODEC = PacketCodec.unit(new HandshakePayload());
 
         @Override
         public Id<? extends CustomPayload> getId() {return ID;}

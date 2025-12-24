@@ -38,6 +38,7 @@ public class ItemsTrackerClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(NetworkingStuff.OnJoinPayload.ID, ((payload, context) -> {
             remainingItems = payload.remainingItems();
             goalItems = payload.goalItems();
+            ClientPlayNetworking.send(new NetworkingStuff.HandshakePayload());
         }));
 
         ClientPlayNetworking.registerGlobalReceiver(NetworkingStuff.RemoveItemPayload.ID, (payload, context) -> {

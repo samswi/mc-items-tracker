@@ -12,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -40,6 +41,8 @@ public class ItemsTracker implements ModInitializer {
     public static List<String> collectedItemsList;
     public static List<String> remainingItemsList;
 
+    public static List<ServerPlayerEntity> handshakenPlayers;
+
     // This should be deleted somewhere in the future
     public static JsonArray collectedItemsJsonArray;
 
@@ -67,6 +70,7 @@ public class ItemsTracker implements ModInitializer {
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.OnJoinPayload.ID, NetworkingStuff.OnJoinPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.RemoveItemPayload.ID, NetworkingStuff.RemoveItemPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.ShowToastPayload.ID, NetworkingStuff.ShowToastPayload.CODEC);
+        PayloadTypeRegistry.playC2S().register(NetworkingStuff.HandshakePayload.ID, NetworkingStuff.HandshakePayload.CODEC);
 
         if (!blacklistFile.exists()){
             try (InputStream in = ItemsTracker.class.getResourceAsStream("/default_blacklist.txt")) {
@@ -76,9 +80,15 @@ public class ItemsTracker implements ModInitializer {
             }
         }
 
+        ServerPlayNetworking.registerGlobalReceiver(NetworkingStuff.HandshakePayload.ID, (handshakePayload, context) -> {
+            handshakenPlayers.add(context.player());
+
+        });
+
     }
 
     public static void onServerCreation(MinecraftServer server) {
+        handshakenPlayers = new ArrayList<>();
         currentServer = server;
         worldFolder = currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath();
         collectedItemsFile = worldFolder.resolve(".collected_items.txt").toFile();
@@ -175,6 +185,18 @@ public class ItemsTracker implements ModInitializer {
             lastItemsIterator++;
             if (lastItemsIterator >= 50) lastItemsIterator = 0;
         }
+    }
+
+    public static void sendActionBarText(){
+        Text actionbarText = Text.literal("")
+                .append(Text.literal(String.valueOf(goalItemsList.size() - remainingItemsList.size())).formatted(Formatting.BOLD).withColor(remainingItemsList.isEmpty() ? 0xFF00FF00 : 0xFFFFFFFF))
+                .append(Text.literal("/" + goalItemsList.size()).fillStyle(Style.EMPTY).withColor(0xFF888888))
+                        .append(Text.literal(" (" + String.format("%.1f%%",(((goalItemsList.size() - remainingItemsList.size()) / (float) goalItemsList.size()))*100) + ")").withColor(remainingItemsList.isEmpty() ? 0xFF00FF00 : 0xFF888888));
+        currentServer.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> {
+            if (!handshakenPlayers.contains(serverPlayerEntity) && serverPlayerEntity.age > 20){
+                serverPlayerEntity.sendMessage(actionbarText, true);
+            }
+        });
     }
 
     public static void onServerExit() {

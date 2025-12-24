@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.net.Proxy;
+import java.util.function.BooleanSupplier;
 
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin{
@@ -33,5 +34,10 @@ public class MinecraftServerMixin{
     @Inject(at=@At("HEAD"), method = "save")
     public void injectItemTrackerSave(boolean suppressLogs, boolean flush, boolean force, CallbackInfoReturnable<Boolean> cir){
         ItemsTracker.saveItemsToFile();
+    }
+
+    @Inject(at=@At("HEAD"), method = "tick")
+    public void injectSendActionBarMessage(BooleanSupplier shouldKeepTicking, CallbackInfo ci){
+        ItemsTracker.sendActionBarText();
     }
 }
