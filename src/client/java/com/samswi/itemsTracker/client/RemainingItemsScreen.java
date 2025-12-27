@@ -6,34 +6,47 @@ import net.minecraft.client.gl.RenderPipelines;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.*;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.PotionContentsComponent;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.Potions;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RemainingItemsScreen extends Screen {
-    int rowWidth;
-    private final ScrollableLayoutWidget scrollableLayoutWidget;
-    final GridWidget grid;
-    final GridWidget.Adder gridAdder;
+    boolean fullscreen = false;
+    private ScrollableLayoutWidget scrollableLayoutWidget;
+    GridWidget grid;
+    GridWidget.Adder gridAdder;
     final MinecraftClient client = MinecraftClient.getInstance();
-    public final ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
+    public  ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
+    final TextFieldWidget searchBar = new TextFieldWidget(client.textRenderer, 200, 15, Text.of("Search"));
 
-    final ButtonWidget extendButton = ButtonWidget.builder(Text.of("⛶"), button -> client.setScreen(new RemainingItemsScreen(
-            (client.getWindow().getScaledWidth() / 24) - 1
-    ))).build();
+    final ButtonWidget extendButton = ButtonWidget.builder(Text.of("⛶"), button -> {
+                fullscreen = !fullscreen;
+                this.init();
+            }).build();
 
     RemainingItemsScreen(int rowWidth){
         super(Text.of("Remaining Items"));
-        this.rowWidth = rowWidth;
 
-        layout.addHeader(Text.of("Item Tracker"), client.textRenderer);
+        searchBar.setChangedListener(s -> {
+           this.init();
+        });
+
+    }
+
+    @Override
+    protected void init() {
+        this.clearChildren();
+        this.blur();
+        super.init();
+        setFocused(searchBar);
+        int rowWidth = fullscreen ? (client.getWindow().getScaledWidth() / 24) - 1 : 12;
+
+        layout = new ThreePartsLayoutWidget(this);
+        layout.addHeader(searchBar);
         extendButton.setPosition(client.getWindow().getScaledWidth() - 26, 6);
         extendButton.setDimensions(20, 20);
         this.layout.addFooter(ButtonWidget.builder(ScreenTexts.DONE, (button) -> this.close()).width(200).build());
@@ -41,6 +54,8 @@ public class RemainingItemsScreen extends Screen {
         grid.getMainPositioner()
                 .margin(4);
         gridAdder = grid.createAdder(rowWidth);
+
+        String filter = searchBar.getText().toLowerCase();
 
         for (String i : ItemsTrackerClient.goalItems){
             ItemStack itemStack = ItemsTracker.parseItem(i);
@@ -50,17 +65,20 @@ public class RemainingItemsScreen extends Screen {
             } else {
                 itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), itemStack, true, true, 0xFF00FF00);
             }
-            gridAdder.add(itemWidget);
+            AtomicBoolean shouldDisplay = new AtomicBoolean(filter.isEmpty());
+
+            if (itemStack.getName().getString().toLowerCase().contains(filter)) shouldDisplay.set(true);
+            else {
+                itemStack.getTooltip(Item.TooltipContext.DEFAULT, client.player, TooltipType.BASIC).forEach(text -> {
+                    if (text.toString().toLowerCase().contains(filter)) shouldDisplay.set(true);
+                });
+            }
+
+            if (shouldDisplay.get()) gridAdder.add(itemWidget);
         }
 
         scrollableLayoutWidget = new ScrollableLayoutWidget(client, grid, layout.getContentHeight());
         layout.addBody(scrollableLayoutWidget);
-
-    }
-
-    @Override
-    protected void init() {
-        super.init();
 
         layout.setPosition(0, 0);
 
