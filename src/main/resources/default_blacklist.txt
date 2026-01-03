@@ -4,7 +4,7 @@ minecraft:chorus_plant
 minecraft:end_portal_frame
 minecraft:farmland
 minecraft:frogspawn
-infested
+infested_
 spawner
 minecraft:reinforced_deepslate
 minecraft:trial_spawner
