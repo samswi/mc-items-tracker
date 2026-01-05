@@ -20,10 +20,15 @@ import java.util.function.BooleanSupplier;
 @Mixin(MinecraftServer.class)
 public class MinecraftServerMixin{
 
-    @Inject(at = @At("TAIL"), method = "<init>")
-    public void catchServer(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, Proxy proxy, DataFixer dataFixer, ApiServices apiServices, ChunkLoadProgress chunkLoadProgress, CallbackInfo ci) {
-        ItemsTracker.onServerCreation(((MinecraftServer) (Object) this));
+//    @Inject(at = @At("TAIL"), method = "<init>")
+//    public void catchServer(Thread serverThread, LevelStorage.Session session, ResourcePackManager dataPackManager, SaveLoader saveLoader, Proxy proxy, DataFixer dataFixer, ApiServices apiServices, ChunkLoadProgress chunkLoadProgress, CallbackInfo ci) {
+//        ItemsTracker.onServerCreation(((MinecraftServer) (Object) this));
+//
+//    }
 
+    @Inject(at = @At("TAIL"), method = "createWorlds")
+    public void initItemTracker(CallbackInfo ci){
+        ItemsTracker.onServerCreation(((MinecraftServer) (Object) this));
     }
 
     @Inject(at = @At("HEAD"), method = "shutdown")

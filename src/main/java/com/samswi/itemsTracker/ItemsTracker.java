@@ -6,10 +6,12 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.InstrumentComponent;
 import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Instrument;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
+import net.minecraft.registry.*;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -47,6 +49,7 @@ public class ItemsTracker implements ModInitializer {
     public static JsonArray collectedItemsJsonArray;
 
     public static List<String> nonNeededItemsList;
+    public static DynamicRegistryManager registryManager;
 
 
     @Override
@@ -54,19 +57,7 @@ public class ItemsTracker implements ModInitializer {
         configFolder = new File(FabricLoader.getInstance().getConfigDir() + "/itemstracker");
         configFolder.mkdirs();
         blacklistFile = new File(configFolder +  "/blacklist.txt");
-        fullItemsList = new ArrayList<>(Registries.ITEM.size());
-        Set<String> potionEffectsList = new HashSet<>(Registries.POTION.size());
-        Registries.POTION.forEach(potion -> potionEffectsList.add(potion.getBaseName()));
-        Registries.ITEM.forEach((item) -> {
-            if (List.of("minecraft:potion", "minecraft:splash_potion", "minecraft:tipped_arrow", "minecraft:lingering_potion").contains(item.toString())){
-                potionEffectsList.forEach(s -> {
-                    fullItemsList.add(item + "P" + s);
-                });
-            }
-            else {
-                fullItemsList.add(item.toString());
-            }
-        });
+
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.OnJoinPayload.ID, NetworkingStuff.OnJoinPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.RemoveItemPayload.ID, NetworkingStuff.RemoveItemPayload.CODEC);
         PayloadTypeRegistry.playS2C().register(NetworkingStuff.ShowToastPayload.ID, NetworkingStuff.ShowToastPayload.CODEC);
@@ -91,6 +82,32 @@ public class ItemsTracker implements ModInitializer {
         handshakenPlayers = new ArrayList<>();
         currentServer = server;
         worldFolder = currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath();
+        fullItemsList = new ArrayList<>(Registries.ITEM.size());
+
+        registryManager = server.getWorlds().iterator().next().getRegistryManager();
+
+        Set<String> potionEffectsList = new HashSet<>(Registries.POTION.size());
+        Registries.POTION.forEach(potion -> potionEffectsList.add(potion.getBaseName()));
+        Set<String> goatHornInstrumentsList = new HashSet<>(Registries.POTION.size());
+        registryManager.getOptional(RegistryKeys.INSTRUMENT).ifPresent(instruments -> instruments.forEach(instrument -> {
+            goatHornInstrumentsList.add(registryManager.getOptional(RegistryKeys.INSTRUMENT).get().getEntry(instrument).getKey().get().getValue().toString());
+        }));
+        registryManager.getOptional(RegistryKeys.INSTRUMENT).stream();
+
+        Registries.ITEM.forEach((item) -> {
+            if (List.of("minecraft:potion", "minecraft:splash_potion", "minecraft:tipped_arrow", "minecraft:lingering_potion").contains(item.toString())){
+                potionEffectsList.forEach(s -> {
+                    fullItemsList.add(item + "P" + s);
+                });
+            } else if (item.toString().matches("minecraft:goat_horn")){
+                goatHornInstrumentsList.forEach(s -> {
+                    fullItemsList.add(item + "I" + s);
+                });
+            }
+            else {
+                fullItemsList.add(item.toString());
+            }
+        });
         collectedItemsFile = worldFolder.resolve(".collected_items.txt").toFile();
         if (!blacklistFile.exists()) {
             try (InputStream in = ItemsTracker.class.getResourceAsStream("/default_blacklist.txt")) {
@@ -167,6 +184,11 @@ public class ItemsTracker implements ModInitializer {
             if (itemStack.get(DataComponentTypes.POTION_CONTENTS).potion().isPresent()) {
                 String potionName = itemStack.get(DataComponentTypes.POTION_CONTENTS).potion().get().value().getBaseName();
                 itemId = itemId + "P" + potionName;
+            }
+        }
+        if (itemStack.get(DataComponentTypes.INSTRUMENT) != null){
+            if (itemStack.get(DataComponentTypes.INSTRUMENT).instrument().getKey().isPresent()) {
+                itemId = itemId + "I" + itemStack.get(DataComponentTypes.INSTRUMENT).instrument().getKey().get().getValue();
             }
         }
 
@@ -257,16 +279,32 @@ public class ItemsTracker implements ModInitializer {
     }
 
     public static ItemStack parseItem(String itemId){
-        if (!itemId.contains("P")) return new ItemStack(Registries.ITEM.get(Identifier.of(itemId)));
-        ItemStack itemStack = new ItemStack(Registries.ITEM.get(Identifier.of(itemId.split("P")[0])));
-        itemStack.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(RegistryEntry.of(Registries.POTION.get(Identifier.of(itemId.split("P")[1])))));
+        ItemStack itemStack;
+        if (itemId.contains("P")){
+            itemStack = new ItemStack(Registries.ITEM.get(Identifier.of(itemId.split("P")[0])));
+            itemStack.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(RegistryEntry.of(Registries.POTION.get(Identifier.of(itemId.split("P")[1])))));
+        } else if (itemId.contains("I")){
+            itemStack = new ItemStack(Registries.ITEM.get(Identifier.of(itemId.split("I")[0])));
+
+            registryManager.getOptional(RegistryKeys.INSTRUMENT).ifPresent(instrumentRegistry -> {
+                RegistryEntry<Instrument> instrumentEntry = instrumentRegistry.getEntry(Identifier.of(itemId.split("I")[1])).orElse(null);
+
+                if (instrumentEntry != null) {
+                    InstrumentComponent instrumentComponent = new InstrumentComponent(instrumentEntry);
+                    itemStack.set(DataComponentTypes.INSTRUMENT, instrumentComponent);
+                }
+            });
+        } else {
+            itemStack = new ItemStack(Registries.ITEM.get(Identifier.of(itemId)));
+        }
+
         return itemStack;
     }
 
     public static Text parseItemText(String itemId){
         Text text;
         // This code is a workaround to a problem I was having with parsing Potion items as a hoverable text
-        if (itemId.contains("P")){
+        if (itemId.contains("P")) {
             text = MutableText.of(Text.of("[").getContent()).append(parseItem(itemId).getFormattedName()).append("]");
         } else {
             text = parseItem(itemId).toHoverableText();
