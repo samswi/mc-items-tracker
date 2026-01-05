@@ -57,24 +57,28 @@ public class RemainingItemsScreen extends Screen {
 
         String filter = searchBar.getText().toLowerCase();
 
-        for (String i : ItemsTrackerClient.goalItems){
-            ItemStack itemStack = ItemsTracker.parseItem(i);
-            BackgroundedItemStackWidget itemWidget;
-            if (ItemsTrackerClient.remainingItems.contains(i)){
-                itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), itemStack, true, true, 0x88000000);
-            } else {
-                itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), itemStack, true, true, 0xFF00FF00);
-            }
-            AtomicBoolean shouldDisplay = new AtomicBoolean(filter.isEmpty());
+        if (ItemsTrackerClient.goalItems != null) {
+            for (String i : ItemsTrackerClient.goalItems) {
+                ItemStack itemStack = ItemsTracker.parseItem(i);
+                BackgroundedItemStackWidget itemWidget;
+                if (ItemsTrackerClient.remainingItems.contains(i)) {
+                    itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), itemStack, true, true, 0x88000000);
+                } else {
+                    itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), itemStack, true, true, 0xFF00FF00);
+                }
+                AtomicBoolean shouldDisplay = new AtomicBoolean(filter.isEmpty());
 
-            if (itemStack.getName().getString().toLowerCase().contains(filter)) shouldDisplay.set(true);
-            else {
-                itemStack.getTooltip(Item.TooltipContext.DEFAULT, client.player, client.options.advancedItemTooltips ? TooltipType.ADVANCED : TooltipType.BASIC).forEach(text -> {
-                    if (text.toString().toLowerCase().contains(filter)) shouldDisplay.set(true);
-                });
-            }
+                if (itemStack.getName().getString().toLowerCase().contains(filter)) shouldDisplay.set(true);
+                else {
+                    itemStack.getTooltip(Item.TooltipContext.DEFAULT, client.player, client.options.advancedItemTooltips ? TooltipType.ADVANCED : TooltipType.BASIC).forEach(text -> {
+                        if (text.toString().toLowerCase().contains(filter)) shouldDisplay.set(true);
+                    });
+                }
 
-            if (shouldDisplay.get()) gridAdder.add(itemWidget);
+                if (shouldDisplay.get()) gridAdder.add(itemWidget);
+            }
+        } else {
+            gridAdder.add(new TextWidget(Text.of("This server doesn't support the items tracker mod"), client.textRenderer));
         }
 
         scrollableLayoutWidget = new ScrollableLayoutWidget(client, grid, layout.getContentHeight());
