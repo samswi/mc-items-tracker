@@ -69,7 +69,7 @@ public class RemainingItemsScreen extends Screen {
 
             if (itemStack.getName().getString().toLowerCase().contains(filter)) shouldDisplay.set(true);
             else {
-                itemStack.getTooltip(Item.TooltipContext.DEFAULT, client.player, TooltipType.BASIC).forEach(text -> {
+                itemStack.getTooltip(Item.TooltipContext.DEFAULT, client.player, client.options.advancedItemTooltips ? TooltipType.ADVANCED : TooltipType.BASIC).forEach(text -> {
                     if (text.toString().toLowerCase().contains(filter)) shouldDisplay.set(true);
                 });
             }
