@@ -234,11 +234,11 @@ public class ItemsTracker implements ModInitializer {
     public static void saveItemsToFile() {
         if (currentServer == null) return;
         if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
-        ArrayList<String> itemsToSaveList = new ArrayList<>(collectedItemsList.size() + nonNeededItemsList.size());
-        itemsToSaveList.addAll(collectedItemsList);
-        itemsToSaveList.addAll(nonNeededItemsList);
+        Set<String> itemsToSaveSet = new HashSet<>(collectedItemsList.size() + nonNeededItemsList.size());
+        itemsToSaveSet.addAll(collectedItemsList);
+        itemsToSaveSet.addAll(nonNeededItemsList);
 
-        saveCollectionToFile(itemsToSaveList, collectedItemsFile);
+        saveCollectionToFile(itemsToSaveSet, collectedItemsFile);
     }
 
     public static JsonArray loadJsonArrayFromFile(File file) throws IOException {
