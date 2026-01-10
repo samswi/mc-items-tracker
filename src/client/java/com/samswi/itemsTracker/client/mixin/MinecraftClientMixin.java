@@ -1,17 +1,16 @@
 package com.samswi.itemsTracker.client.mixin;
 
 import com.samswi.itemsTracker.client.ItemsTrackerClient;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.Minecraft;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MinecraftClient.class)
+@Mixin(Minecraft.class)
 public abstract class MinecraftClientMixin {
 
-    @Inject(at = @At("HEAD"), method = "Lnet/minecraft/client/MinecraftClient;onDisconnected()V")
+    @Inject(at = @At("HEAD"), method = "clearDownloadedResourcePacks()V")
     public void clean(CallbackInfo ci){
         ItemsTrackerClient.goalItems = null;
         ItemsTrackerClient.remainingItems = null;

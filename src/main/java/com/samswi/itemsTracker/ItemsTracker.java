@@ -5,21 +5,25 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.InstrumentComponent;
-import net.minecraft.component.type.PotionContentsComponent;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Instrument;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.*;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.WorldSavePath;
-
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Instrument;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.component.InstrumentComponent;
+import net.minecraft.world.level.storage.LevelResource;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,13 +47,13 @@ public class ItemsTracker implements ModInitializer {
     public static List<String> collectedItemsList;
     public static List<String> remainingItemsList;
 
-    public static List<ServerPlayerEntity> handshakenPlayers;
+    public static List<ServerPlayer> handshakenPlayers;
 
     // This should be deleted somewhere in the future
     public static JsonArray collectedItemsJsonArray;
 
     public static List<String> nonNeededItemsList;
-    public static DynamicRegistryManager registryManager;
+    public static RegistryAccess registryManager;
 
 
     @Override
@@ -81,20 +85,20 @@ public class ItemsTracker implements ModInitializer {
     public static void onServerCreation(MinecraftServer server) {
         handshakenPlayers = new ArrayList<>();
         currentServer = server;
-        worldFolder = currentServer.getSavePath(WorldSavePath.ROOT).toAbsolutePath();
-        fullItemsList = new ArrayList<>(Registries.ITEM.size());
+        worldFolder = currentServer.getWorldPath(LevelResource.ROOT).toAbsolutePath();
+        fullItemsList = new ArrayList<>(BuiltInRegistries.ITEM.size());
 
-        registryManager = server.getWorlds().iterator().next().getRegistryManager();
+        registryManager = server.getAllLevels().iterator().next().registryAccess();
 
-        Set<String> potionEffectsList = new HashSet<>(Registries.POTION.size());
-        Registries.POTION.forEach(potion -> potionEffectsList.add(potion.getBaseName()));
-        Set<String> goatHornInstrumentsList = new HashSet<>(Registries.POTION.size());
-        registryManager.getOptional(RegistryKeys.INSTRUMENT).ifPresent(instruments -> instruments.forEach(instrument -> {
-            goatHornInstrumentsList.add(registryManager.getOptional(RegistryKeys.INSTRUMENT).get().getEntry(instrument).getKey().get().getValue().toString());
+        Set<String> potionEffectsList = new HashSet<>(BuiltInRegistries.POTION.size());
+        BuiltInRegistries.POTION.forEach(potion -> potionEffectsList.add(potion.name()));
+        Set<String> goatHornInstrumentsList = new HashSet<>(BuiltInRegistries.POTION.size());
+        registryManager.lookup(Registries.INSTRUMENT).ifPresent(instruments -> instruments.forEach(instrument -> {
+            goatHornInstrumentsList.add(registryManager.lookup(Registries.INSTRUMENT).get().wrapAsHolder(instrument).unwrapKey().get().identifier().toString());
         }));
-        registryManager.getOptional(RegistryKeys.INSTRUMENT).stream();
+        registryManager.lookup(Registries.INSTRUMENT).stream();
 
-        Registries.ITEM.forEach((item) -> {
+        BuiltInRegistries.ITEM.forEach((item) -> {
             if (List.of("minecraft:potion", "minecraft:splash_potion", "minecraft:tipped_arrow", "minecraft:lingering_potion").contains(item.toString())){
                 potionEffectsList.forEach(s -> {
                     fullItemsList.add(item + "P" + s);
@@ -178,29 +182,29 @@ public class ItemsTracker implements ModInitializer {
 
     }
 
-    public static void removeItemFromRemainingItems(ItemStack itemStack, PlayerEntity player) {
-        String itemId = itemStack.getRegistryEntry().getIdAsString();
-        if (itemStack.get(DataComponentTypes.POTION_CONTENTS) != null){
-            if (itemStack.get(DataComponentTypes.POTION_CONTENTS).potion().isPresent()) {
-                String potionName = itemStack.get(DataComponentTypes.POTION_CONTENTS).potion().get().value().getBaseName();
+    public static void removeItemFromRemainingItems(ItemStack itemStack, Player player) {
+        String itemId = itemStack.getItemHolder().getRegisteredName();
+        if (itemStack.get(DataComponents.POTION_CONTENTS) != null){
+            if (itemStack.get(DataComponents.POTION_CONTENTS).potion().isPresent()) {
+                String potionName = itemStack.get(DataComponents.POTION_CONTENTS).potion().get().value().name();
                 itemId = itemId + "P" + potionName;
             }
         }
-        if (itemStack.get(DataComponentTypes.INSTRUMENT) != null){
-            if (itemStack.get(DataComponentTypes.INSTRUMENT).instrument().getKey().isPresent()) {
-                itemId = itemId + "I" + itemStack.get(DataComponentTypes.INSTRUMENT).instrument().getKey().get().getValue();
+        if (itemStack.get(DataComponents.INSTRUMENT) != null){
+            if (itemStack.get(DataComponents.INSTRUMENT).instrument().key().isPresent()) {
+                itemId = itemId + "I" + itemStack.get(DataComponents.INSTRUMENT).instrument().key().get().identifier();
             }
         }
 
-        if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
+        if (currentServer.overworld().isClientSide() && currentServer.isDedicatedServer()) return;
         if (!lastItems.contains(itemId)) {
             if (remainingItemsList.remove(itemId)) {
                 collectedItemsList.add(itemId);
-                Text text = player.getStyledDisplayName().copy().append(Text.of(" obtained ").copyContentOnly().fillStyle(Style.EMPTY).withColor(0xFFAAAAAA)).append(parseItemText(itemId));
+                Component text = player.getFeedbackDisplayName().copy().append(Component.nullToEmpty(" obtained ").plainCopy().withStyle(Style.EMPTY).withColor(0xFFAAAAAA)).append(parseItemText(itemId));
                 String finalItemId = itemId;
-                currentServer.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> {
+                currentServer.getPlayerList().getPlayers().forEach(serverPlayerEntity -> {
                     ServerPlayNetworking.send(serverPlayerEntity, new NetworkingStuff.RemoveItemPayload(finalItemId, remainingItemsList.size()));
-                    serverPlayerEntity.sendMessage(text);
+                    serverPlayerEntity.sendSystemMessage(text);
                 });
             } else if (!nonNeededItemsList.contains(itemId)) nonNeededItemsList.add(itemId);
             lastItems.add(lastItemsIterator, itemId);
@@ -210,19 +214,19 @@ public class ItemsTracker implements ModInitializer {
     }
 
     public static void sendActionBarText(){
-        Text actionbarText = Text.literal("")
-                .append(Text.literal(String.valueOf(goalItemsList.size() - remainingItemsList.size())).formatted(Formatting.BOLD).withColor(remainingItemsList.isEmpty() ? 0xFF00FF00 : 0xFFFFFFFF))
-                .append(Text.literal("/" + goalItemsList.size()).fillStyle(Style.EMPTY).withColor(0xFF888888))
-                        .append(Text.literal(" (" + String.format("%.1f%%",(((goalItemsList.size() - remainingItemsList.size()) / (float) goalItemsList.size()))*100) + ")").withColor(remainingItemsList.isEmpty() ? 0xFF00FF00 : 0xFF888888));
-        currentServer.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> {
-            if (!handshakenPlayers.contains(serverPlayerEntity) && serverPlayerEntity.age > 20){
-                serverPlayerEntity.sendMessage(actionbarText, true);
+        Component actionbarText = Component.literal("")
+                .append(Component.literal(String.valueOf(goalItemsList.size() - remainingItemsList.size())).withStyle(ChatFormatting.BOLD).withColor(remainingItemsList.isEmpty() ? 0xFF00FF00 : 0xFFFFFFFF))
+                .append(Component.literal("/" + goalItemsList.size()).withStyle(Style.EMPTY).withColor(0xFF888888))
+                        .append(Component.literal(" (" + String.format("%.1f%%",(((goalItemsList.size() - remainingItemsList.size()) / (float) goalItemsList.size()))*100) + ")").withColor(remainingItemsList.isEmpty() ? 0xFF00FF00 : 0xFF888888));
+        currentServer.getPlayerList().getPlayers().forEach(serverPlayerEntity -> {
+            if (!handshakenPlayers.contains(serverPlayerEntity) && serverPlayerEntity.tickCount > 20){
+                serverPlayerEntity.displayClientMessage(actionbarText, true);
             }
         });
     }
 
     public static void onServerExit() {
-        if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
+        if (currentServer.overworld().isClientSide() && currentServer.isDedicatedServer()) return;
         saveItemsToFile();
         remainingItemsList = null;
         lastItems = new ArrayList<>(50);
@@ -233,7 +237,7 @@ public class ItemsTracker implements ModInitializer {
 
     public static void saveItemsToFile() {
         if (currentServer == null) return;
-        if (currentServer.getOverworld().isClient() && currentServer.isDedicated()) return;
+        if (currentServer.overworld().isClientSide() && currentServer.isDedicatedServer()) return;
         Set<String> itemsToSaveSet = new HashSet<>(collectedItemsList.size() + nonNeededItemsList.size());
         itemsToSaveSet.addAll(collectedItemsList);
         itemsToSaveSet.addAll(nonNeededItemsList);
@@ -269,9 +273,9 @@ public class ItemsTracker implements ModInitializer {
             });
         } catch (IOException e){
             System.out.println("Failed to save collectedItemsList");
-            currentServer.getPlayerManager().getPlayerList().forEach(serverPlayerEntity -> {
+            currentServer.getPlayerList().getPlayers().forEach(serverPlayerEntity -> {
                 ServerPlayNetworking.send(serverPlayerEntity, new NetworkingStuff.ShowToastPayload("Failed to save .collected_items.txt", "Check server-side logs"));
-                serverPlayerEntity.sendMessage(Text.literal("Failed to save .collected_items.txt. Hover me for error info").formatted(Formatting.UNDERLINE).withColor(0xFFFF0000).styled(style -> style.withHoverEvent(new HoverEvent.ShowText(Text.of(e.getMessage())))));
+                serverPlayerEntity.sendSystemMessage(Component.literal("Failed to save .collected_items.txt. Hover me for error info").withStyle(ChatFormatting.UNDERLINE).withColor(0xFFFF0000).withStyle(style -> style.withHoverEvent(new HoverEvent.ShowText(Component.nullToEmpty(e.getMessage())))));
 
             });
             e.printStackTrace();
@@ -281,33 +285,33 @@ public class ItemsTracker implements ModInitializer {
     public static ItemStack parseItem(String itemId){
         ItemStack itemStack;
         if (itemId.contains("P")){
-            itemStack = new ItemStack(Registries.ITEM.get(Identifier.of(itemId.split("P")[0])));
-            itemStack.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(RegistryEntry.of(Registries.POTION.get(Identifier.of(itemId.split("P")[1])))));
+            itemStack = new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(itemId.split("P")[0])));
+            itemStack.set(DataComponents.POTION_CONTENTS, new PotionContents(Holder.direct(BuiltInRegistries.POTION.getValue(Identifier.parse(itemId.split("P")[1])))));
         } else if (itemId.contains("I")){
-            itemStack = new ItemStack(Registries.ITEM.get(Identifier.of(itemId.split("I")[0])));
+            itemStack = new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(itemId.split("I")[0])));
 
-            registryManager.getOptional(RegistryKeys.INSTRUMENT).ifPresent(instrumentRegistry -> {
-                RegistryEntry<Instrument> instrumentEntry = instrumentRegistry.getEntry(Identifier.of(itemId.split("I")[1])).orElse(null);
+            registryManager.lookup(Registries.INSTRUMENT).ifPresent(instrumentRegistry -> {
+                Holder<Instrument> instrumentEntry = instrumentRegistry.get(Identifier.parse(itemId.split("I")[1])).orElse(null);
 
                 if (instrumentEntry != null) {
                     InstrumentComponent instrumentComponent = new InstrumentComponent(instrumentEntry);
-                    itemStack.set(DataComponentTypes.INSTRUMENT, instrumentComponent);
+                    itemStack.set(DataComponents.INSTRUMENT, instrumentComponent);
                 }
             });
         } else {
-            itemStack = new ItemStack(Registries.ITEM.get(Identifier.of(itemId)));
+            itemStack = new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(itemId)));
         }
 
         return itemStack;
     }
 
-    public static Text parseItemText(String itemId){
-        Text text;
+    public static Component parseItemText(String itemId){
+        Component text;
         // This code is a workaround to a problem I was having with parsing Potion items as a hoverable text
         if (itemId.contains("P")) {
-            text = MutableText.of(Text.of("[").getContent()).append(parseItem(itemId).getFormattedName()).append("]");
+            text = MutableComponent.create(Component.nullToEmpty("[").getContents()).append(parseItem(itemId).getStyledHoverName()).append("]");
         } else {
-            text = parseItem(itemId).toHoverableText();
+            text = parseItem(itemId).getDisplayName();
         }
         return text;
     }

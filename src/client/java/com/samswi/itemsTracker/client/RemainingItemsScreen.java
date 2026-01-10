@@ -1,37 +1,42 @@
 package com.samswi.itemsTracker.client;
 
 import com.samswi.itemsTracker.ItemsTracker;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gl.RenderPipelines;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.*;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.Text;
-
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.ItemDisplayWidget;
+import net.minecraft.client.gui.components.ScrollableLayout;
+import net.minecraft.client.gui.components.StringWidget;
+import net.minecraft.client.gui.layouts.GridLayout;
+import net.minecraft.client.gui.layouts.HeaderAndFooterLayout;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RemainingItemsScreen extends Screen {
     boolean fullscreen = false;
-    private ScrollableLayoutWidget scrollableLayoutWidget;
-    GridWidget grid;
-    GridWidget.Adder gridAdder;
-    final MinecraftClient client = MinecraftClient.getInstance();
-    public  ThreePartsLayoutWidget layout = new ThreePartsLayoutWidget(this);
-    final TextFieldWidget searchBar = new TextFieldWidget(client.textRenderer, 200, 15, Text.of("Search"));
+    private ScrollableLayout scrollableLayoutWidget;
+    GridLayout grid;
+    GridLayout.RowHelper gridAdder;
+    final Minecraft client = Minecraft.getInstance();
+    public  HeaderAndFooterLayout layout = new HeaderAndFooterLayout(this);
+    final EditBox searchBar = new EditBox(client.font, 200, 15, Component.nullToEmpty("Search"));
 
-    final ButtonWidget extendButton = ButtonWidget.builder(Text.of("⛶"), button -> {
+    final Button extendButton = Button.builder(Component.nullToEmpty("⛶"), button -> {
                 fullscreen = !fullscreen;
                 this.init();
             }).build();
 
     RemainingItemsScreen(int rowWidth){
-        super(Text.of("Remaining Items"));
+        super(Component.nullToEmpty("Remaining Items"));
 
-        searchBar.setChangedListener(s -> {
+        searchBar.setResponder(s -> {
            this.init();
         });
 
@@ -39,75 +44,75 @@ public class RemainingItemsScreen extends Screen {
 
     @Override
     protected void init() {
-        this.clearChildren();
-        this.blur();
+        this.clearWidgets();
+        this.clearFocus();
         super.init();
         setFocused(searchBar);
-        int rowWidth = fullscreen ? (client.getWindow().getScaledWidth() / 24) - 1 : 12;
+        int rowWidth = fullscreen ? (minecraft.getWindow().getGuiScaledWidth() / 24) - 1 : 12;
 
-        layout = new ThreePartsLayoutWidget(this);
-        layout.addHeader(searchBar);
-        extendButton.setPosition(client.getWindow().getScaledWidth() - 26, 6);
-        extendButton.setDimensions(20, 20);
-        this.layout.addFooter(ButtonWidget.builder(ScreenTexts.DONE, (button) -> this.close()).width(200).build());
-        grid = new GridWidget();
-        grid.getMainPositioner()
-                .margin(4);
-        gridAdder = grid.createAdder(rowWidth);
+        layout = new HeaderAndFooterLayout(this);
+        layout.addToHeader(searchBar);
+        extendButton.setPosition(minecraft.getWindow().getGuiScaledWidth() - 26, 6);
+        extendButton.setSize(20, 20);
+        this.layout.addToFooter(Button.builder(CommonComponents.GUI_DONE, (button) -> this.onClose()).width(200).build());
+        grid = new GridLayout();
+        grid.defaultCellSetting()
+                .padding(4);
+        gridAdder = grid.createRowHelper(rowWidth);
 
-        String filter = searchBar.getText().toLowerCase();
+        String filter = searchBar.getValue().toLowerCase();
 
         if (ItemsTrackerClient.goalItems != null) {
             for (String i : ItemsTrackerClient.goalItems) {
                 ItemStack itemStack = ItemsTracker.parseItem(i);
                 BackgroundedItemStackWidget itemWidget;
                 if (ItemsTrackerClient.remainingItems.contains(i)) {
-                    itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), itemStack, true, true, 0x88000000);
+                    itemWidget = new BackgroundedItemStackWidget(minecraft, 0, 0, 16, 16, Component.nullToEmpty(""), itemStack, true, true, 0x88000000);
                 } else {
-                    itemWidget = new BackgroundedItemStackWidget(client, 0, 0, 16, 16, Text.of(""), itemStack, true, true, 0xFF00FF00);
+                    itemWidget = new BackgroundedItemStackWidget(minecraft, 0, 0, 16, 16, Component.nullToEmpty(""), itemStack, true, true, 0xFF00FF00);
                 }
                 AtomicBoolean shouldDisplay = new AtomicBoolean(filter.isEmpty());
 
-                if (itemStack.getName().getString().toLowerCase().contains(filter)) shouldDisplay.set(true);
+                if (itemStack.getHoverName().getString().toLowerCase().contains(filter)) shouldDisplay.set(true);
                 else {
-                    itemStack.getTooltip(Item.TooltipContext.DEFAULT, client.player, client.options.advancedItemTooltips ? TooltipType.ADVANCED : TooltipType.BASIC).forEach(text -> {
+                    itemStack.getTooltipLines(Item.TooltipContext.EMPTY, minecraft.player, minecraft.options.advancedItemTooltips ? TooltipFlag.ADVANCED : TooltipFlag.NORMAL).forEach(text -> {
                         if (text.toString().toLowerCase().contains(filter)) shouldDisplay.set(true);
                     });
                 }
 
-                if (shouldDisplay.get()) gridAdder.add(itemWidget);
+                if (shouldDisplay.get()) gridAdder.addChild(itemWidget);
             }
         } else {
-            gridAdder.add(new TextWidget(Text.of("This server doesn't support the items tracker mod"), client.textRenderer));
+            gridAdder.addChild(new StringWidget(Component.nullToEmpty("This server doesn't support the items tracker mod"), minecraft.font));
         }
 
-        scrollableLayoutWidget = new ScrollableLayoutWidget(client, grid, layout.getContentHeight());
-        layout.addBody(scrollableLayoutWidget);
+        scrollableLayoutWidget = new ScrollableLayout(minecraft, grid, layout.getContentHeight());
+        layout.addToContents(scrollableLayoutWidget);
 
         layout.setPosition(0, 0);
 
-        layout.refreshPositions();
-        scrollableLayoutWidget.setHeight(layout.getContentHeight());
-        scrollableLayoutWidget.refreshPositions();
+        layout.arrangeElements();
+        scrollableLayoutWidget.setMaxHeight(layout.getContentHeight());
+        scrollableLayoutWidget.arrangeElements();
         scrollableLayoutWidget.setPosition(scrollableLayoutWidget.getX(), layout.getHeaderHeight());
-        grid.refreshPositions();
-        layout.forEachChild(this::addDrawableChild);
-        this.addDrawableChild(extendButton);
+        grid.arrangeElements();
+        layout.visitWidgets(this::addRenderableWidget);
+        this.addRenderableWidget(extendButton);
 
     }
 
     @Override
-    public void render(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, Screen.FOOTER_SEPARATOR_TEXTURE, 0, this.height - this.layout.getFooterHeight(), 0.0F, 0.0F, this.width, 2, 32, 2);
-        context.drawTexture(RenderPipelines.GUI_TEXTURED, Screen.HEADER_SEPARATOR_TEXTURE, 0, this.layout.getHeaderHeight() - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
-        this.renderDarkening(context, 0, this.layout.getHeaderHeight(), this.width, layout.getContentHeight());
+    public void render(GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
+        context.blit(RenderPipelines.GUI_TEXTURED, Screen.FOOTER_SEPARATOR, 0, this.height - this.layout.getFooterHeight(), 0.0F, 0.0F, this.width, 2, 32, 2);
+        context.blit(RenderPipelines.GUI_TEXTURED, Screen.HEADER_SEPARATOR, 0, this.layout.getHeaderHeight() - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
+        this.renderMenuBackground(context, 0, this.layout.getHeaderHeight(), this.width, layout.getContentHeight());
         super.render(context, mouseX, mouseY, deltaTicks);
     }
 
-    public static class BackgroundedItemStackWidget extends ItemStackWidget{
+    public static class BackgroundedItemStackWidget extends ItemDisplayWidget{
         final int backgroundColor;
 
-        public BackgroundedItemStackWidget(MinecraftClient client, int x, int y, int width, int height, Text message, ItemStack stack, boolean drawOverlay, boolean hasTooltip, int background) {
+        public BackgroundedItemStackWidget(Minecraft client, int x, int y, int width, int height, Component message, ItemStack stack, boolean drawOverlay, boolean hasTooltip, int background) {
             super(client, x, y, width, height, message, stack, drawOverlay, hasTooltip);
             backgroundColor = background;
 
@@ -115,7 +120,7 @@ public class RemainingItemsScreen extends Screen {
 
 
         @Override
-        protected void renderWidget(DrawContext context, int mouseX, int mouseY, float deltaTicks) {
+        protected void renderWidget(GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
             context.fill(this.getX()-4, this.getY()-4, this.getX()+this.getWidth()+4, this.getY()+this.getHeight()+4, backgroundColor);
             super.renderWidget(context, mouseX, mouseY, deltaTicks);
         }

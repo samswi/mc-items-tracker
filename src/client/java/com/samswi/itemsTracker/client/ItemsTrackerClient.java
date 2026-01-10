@@ -9,10 +9,10 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.toast.SystemToast;
-import net.minecraft.text.Text;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.toasts.SystemToast;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 
@@ -23,7 +23,7 @@ public class ItemsTrackerClient implements ClientModInitializer {
 
     public static List<String> remainingItems;
     public static List<String> goalItems;
-    private static KeyBinding keyBinding;
+    private static KeyMapping keyBinding;
 
     public static final File configFile = new File(FabricLoader.getInstance().getConfigDir() + "/itemstracker/config.txt");
 
@@ -43,21 +43,21 @@ public class ItemsTrackerClient implements ClientModInitializer {
 
         ClientPlayNetworking.registerGlobalReceiver(NetworkingStuff.RemoveItemPayload.ID, (payload, context) -> {
             remainingItems.remove(payload.itemId());
-            HUDRenderer.highlightEndTime = (Util.getMeasuringTimeMs() / 1000.0) + 5;
+            HUDRenderer.highlightEndTime = (Util.getMillis() / 1000.0) + 5;
         });
 
         ClientPlayNetworking.registerGlobalReceiver(NetworkingStuff.ShowToastPayload.ID, (payload, context) -> {
-            MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_ACCESS_FAILURE, Text.of(payload.title()), Text.of(payload.description())));
+            Minecraft.getInstance().getToastManager().addToast(new SystemToast(SystemToast.SystemToastId.WORLD_ACCESS_FAILURE, Component.literal(payload.title()), Component.literal(payload.description())));
         });
 
-        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "Open remaining items screen",
                 GLFW.GLFW_KEY_X,
-                KeyBinding.Category.MISC
+                KeyMapping.Category.MISC
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(minecraftClient -> {
-            if (keyBinding.wasPressed()){
+            if (keyBinding.isDown()){
                 minecraftClient.setScreen(new RemainingItemsScreen(12));
             }
         });
