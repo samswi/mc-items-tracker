@@ -95,6 +95,7 @@ public class ItemsTrackerConfigScreen extends Screen {
         scrollableLayoutWidget = new ScrollableLayout(minecraft, grid, layout.getContentHeight());
 
         layout.addToContents(scrollableLayoutWidget);
+        init();
 
     }
 
@@ -104,8 +105,8 @@ public class ItemsTrackerConfigScreen extends Screen {
 
         layout.setPosition(0, 0);
 
+        scrollableLayoutWidget.setMaxHeight(99999);
         layout.arrangeElements();
-        scrollableLayoutWidget.setMaxHeight(layout.getContentHeight());
         scrollableLayoutWidget.arrangeElements();
         scrollableLayoutWidget.setPosition(scrollableLayoutWidget.getX(), layout.getHeaderHeight());
         grid.arrangeElements();

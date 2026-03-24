@@ -4,7 +4,7 @@ import com.samswi.itemsTracker.NetworkingStuff;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
@@ -50,7 +50,7 @@ public class ItemsTrackerClient implements ClientModInitializer {
             Minecraft.getInstance().getToastManager().addToast(new SystemToast(SystemToast.SystemToastId.WORLD_ACCESS_FAILURE, Component.literal(payload.title()), Component.literal(payload.description())));
         });
 
-        keyBinding = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+        keyBinding = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "Open remaining items screen",
                 GLFW.GLFW_KEY_X,
                 KeyMapping.Category.MISC

@@ -2,7 +2,7 @@ package com.samswi.itemsTracker.client;
 
 import com.samswi.itemsTracker.ItemsTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.ItemDisplayWidget;
@@ -102,11 +102,11 @@ public class RemainingItemsScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
         context.blit(RenderPipelines.GUI_TEXTURED, Screen.FOOTER_SEPARATOR, 0, this.height - this.layout.getFooterHeight(), 0.0F, 0.0F, this.width, 2, 32, 2);
         context.blit(RenderPipelines.GUI_TEXTURED, Screen.HEADER_SEPARATOR, 0, this.layout.getHeaderHeight() - 2, 0.0F, 0.0F, this.width, 2, 32, 2);
-        this.renderMenuBackground(context, 0, this.layout.getHeaderHeight(), this.width, layout.getContentHeight());
-        super.render(context, mouseX, mouseY, deltaTicks);
+        this.extractMenuBackground(context, 0, this.layout.getHeaderHeight(), this.width, layout.getContentHeight());
+        super.extractRenderState(context, mouseX, mouseY, deltaTicks);
     }
 
     public static class BackgroundedItemStackWidget extends ItemDisplayWidget{
@@ -120,9 +120,9 @@ public class RemainingItemsScreen extends Screen {
 
 
         @Override
-        protected void renderWidget(GuiGraphics context, int mouseX, int mouseY, float deltaTicks) {
+        protected void extractWidgetRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float deltaTicks) {
             context.fill(this.getX()-4, this.getY()-4, this.getX()+this.getWidth()+4, this.getY()+this.getHeight()+4, backgroundColor);
-            super.renderWidget(context, mouseX, mouseY, deltaTicks);
+            super.extractWidgetRenderState(context, mouseX, mouseY, deltaTicks);
         }
     }
 }

@@ -2,7 +2,7 @@ package com.samswi.itemsTracker.client;
 
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.PlainTextContents;
@@ -15,7 +15,7 @@ public class HUDRenderer {
     public static final Identifier IDENTIFIER = Identifier.fromNamespaceAndPath("itemstracker", "hud");
     public static double highlightEndTime = 0;
 
-    public static void render(GuiGraphics context, DeltaTracker tickCounter) {
+    public static void render(GuiGraphicsExtractor context, DeltaTracker tickCounter) {
         if (ItemsTrackerClient.goalItems == null) return;
         int color;
         if (ItemsTrackerClient.remainingItems.isEmpty()){
@@ -54,10 +54,10 @@ public class HUDRenderer {
         int bg_color = (bg_alpha << 24);
         context.fill(-5, -5, ((itemCountWidget.getWidth()*3) + Math.max(allItemsCountWidget.getWidth(), percentageDoneWidget.getWidth()) + 3) + 5, itemCountWidget.getHeight()*3 + 2, bg_color);
         matrices.scale(3.0f, 3.0f);
-        itemCountWidget.render(context, 0, 0, 0);
+        itemCountWidget.extractRenderState(context, 0, 0, 0);
         matrices.popMatrix();
-        allItemsCountWidget.render(context, 0, 0, 0);
-        percentageDoneWidget.render(context,0,0,0);
+        allItemsCountWidget.extractRenderState(context, 0, 0, 0);
+        percentageDoneWidget.extractRenderState(context,0,0,0);
         matrices.popMatrix();
     }
 }

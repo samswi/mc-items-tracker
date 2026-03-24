@@ -7,7 +7,7 @@ import net.minecraft.commands.CommandBuildContext;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommands.literal;
 
 public class ItemsTrackerCommand {
     static final Minecraft client = Minecraft.getInstance();

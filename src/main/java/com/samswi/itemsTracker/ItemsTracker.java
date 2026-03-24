@@ -62,10 +62,11 @@ public class ItemsTracker implements ModInitializer {
         configFolder.mkdirs();
         blacklistFile = new File(configFolder +  "/blacklist.txt");
 
-        PayloadTypeRegistry.playS2C().register(NetworkingStuff.OnJoinPayload.ID, NetworkingStuff.OnJoinPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(NetworkingStuff.RemoveItemPayload.ID, NetworkingStuff.RemoveItemPayload.CODEC);
-        PayloadTypeRegistry.playS2C().register(NetworkingStuff.ShowToastPayload.ID, NetworkingStuff.ShowToastPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(NetworkingStuff.HandshakePayload.ID, NetworkingStuff.HandshakePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(NetworkingStuff.OnJoinPayload.ID, NetworkingStuff.OnJoinPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(NetworkingStuff.RemoveItemPayload.ID, NetworkingStuff.RemoveItemPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(NetworkingStuff.ShowToastPayload.ID, NetworkingStuff.ShowToastPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(NetworkingStuff.HandshakePayload.ID, NetworkingStuff.HandshakePayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(NetworkingStuff.HandshakePayload.ID, NetworkingStuff.HandshakePayload.CODEC);
 
         if (!blacklistFile.exists()){
             try (InputStream in = ItemsTracker.class.getResourceAsStream("/default_blacklist.txt")) {
@@ -77,7 +78,6 @@ public class ItemsTracker implements ModInitializer {
 
         ServerPlayNetworking.registerGlobalReceiver(NetworkingStuff.HandshakePayload.ID, (handshakePayload, context) -> {
             handshakenPlayers.add(context.player());
-
         });
 
     }
@@ -183,7 +183,7 @@ public class ItemsTracker implements ModInitializer {
     }
 
     public static void removeItemFromRemainingItems(ItemStack itemStack, Player player) {
-        String itemId = itemStack.getItemHolder().getRegisteredName();
+        String itemId = itemStack.typeHolder().getRegisteredName();
         if (itemStack.get(DataComponents.POTION_CONTENTS) != null){
             if (itemStack.get(DataComponents.POTION_CONTENTS).potion().isPresent()) {
                 String potionName = itemStack.get(DataComponents.POTION_CONTENTS).potion().get().value().name();
@@ -191,8 +191,8 @@ public class ItemsTracker implements ModInitializer {
             }
         }
         if (itemStack.get(DataComponents.INSTRUMENT) != null){
-            if (itemStack.get(DataComponents.INSTRUMENT).instrument().key().isPresent()) {
-                itemId = itemId + "I" + itemStack.get(DataComponents.INSTRUMENT).instrument().key().get().identifier();
+            if (itemStack.get(DataComponents.INSTRUMENT).instrument().unwrapKey().isPresent()) {
+                itemId = itemId + "I" + itemStack.get(DataComponents.INSTRUMENT).instrument().unwrapKey().get().identifier();
             }
         }
 
@@ -220,7 +220,7 @@ public class ItemsTracker implements ModInitializer {
                         .append(Component.literal(" (" + String.format("%.1f%%",(((goalItemsList.size() - remainingItemsList.size()) / (float) goalItemsList.size()))*100) + ")").withColor(remainingItemsList.isEmpty() ? 0xFF00FF00 : 0xFF888888));
         currentServer.getPlayerList().getPlayers().forEach(serverPlayerEntity -> {
             if (!handshakenPlayers.contains(serverPlayerEntity) && serverPlayerEntity.tickCount > 20){
-                serverPlayerEntity.displayClientMessage(actionbarText, true);
+                serverPlayerEntity.sendSystemMessage(actionbarText);
             }
         });
     }
